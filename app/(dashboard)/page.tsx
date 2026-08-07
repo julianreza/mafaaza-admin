@@ -43,8 +43,8 @@ export default function DashboardPage() {
       </header>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, i) => (
-          <Card key={i} className="transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+        {stats.map((stat) => (
+          <Card key={stat.title} className="transition-all duration-300 hover:shadow-md hover:-translate-y-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
               <stat.icon className={`h-4 w-4 ${stat.color}`} />
