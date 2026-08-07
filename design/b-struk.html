@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mafaaza — Arah B: Struk</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --background:#F2F1EC;      /* warm paper grey */
+  --card:#FCFCFA;            /* nota putih */
+  --foreground:#191A17;
+  --muted-foreground:#6A6C64;
+  --border:#E1E0D8;
+  --dots:#B9B8AE;            /* leader dots */
+
+  --primary:#2A2E7A;         /* indigo ink — stempel */
+  --primary-foreground:#FCFCFA;
+  --attention:#B4610C;       /* saffron, not terracotta */
+  --ok:#1E6B45;
+
+  --radius:6px;
+  --font-body:'Instrument Sans',sans-serif;
+  --font-num:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--background);color:var(--foreground);font-family:var(--font-body);margin:0}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+
+/* SIGNATURE 1 — dotted leader binds a label to its amount, like a printed nota */
+.leader{display:flex;align-items:baseline;gap:10px}
+.leader-dots{flex:1;border-bottom:1px dotted var(--dots);transform:translateY(-5px)}
+
+/* SIGNATURE 2 — scalloped bottom edge: this block IS a receipt */
+.tear{
+  --n:9px;
+  -webkit-mask:
+    linear-gradient(#000 0 0) top/100% calc(100% - var(--n)) no-repeat,
+    radial-gradient(circle var(--n) at 50% 0,#0000 99%,#000) bottom/calc(var(--n)*2) var(--n) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) top/100% calc(100% - var(--n)) no-repeat,
+    radial-gradient(circle var(--n) at 50% 0,#0000 99%,#000) bottom/calc(var(--n)*2) var(--n) repeat-x;
+}
+
+.enter{opacity:0;transform:translateY(8px);animation:enter 280ms cubic-bezier(.2,0,0,1) forwards}
+.d1{animation-delay:50ms}.d2{animation-delay:100ms}.d3{animation-delay:150ms}
+@keyframes enter{to{opacity:1;transform:none}}
+
+.icon{transition:background-color 130ms linear,color 130ms linear}
+.icon:hover{background:#E7E6DE}
+.icon[aria-current="page"]{background:var(--primary);color:var(--primary-foreground)}
+
+.rowh{transition:background-color 130ms linear}
+.rowh:hover{background:#F6F5F0}
+
+.btn{transition:background-color 140ms linear}
+.btn:hover{background:#22265F}
+input{transition:border-color 140ms linear,box-shadow 140ms linear}
+input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(42,46,122,.13)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.stamp{border:1.5px solid var(--primary);color:var(--primary);letter-spacing:.1em;transform:rotate(-3deg)}
+</style>
+</head>
+<body class="p-6 md:p-10">
+
+<p class="num text-[11px] uppercase tracking-[.14em]" style="color:var(--muted-foreground)">Arah B — Struk</p>
+<h1 class="text-2xl font-bold mt-1 mb-8" style="letter-spacing:-.02em">Angka bicara seperti di nota: monospace, garis titik, tepi sobek</h1>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div class="mb-10" style="max-width:400px">
+  <div class="tear p-8 pb-12" style="background:var(--card)">
+    <div class="enter flex items-start justify-between">
+      <div>
+        <div class="text-lg font-bold">Mafaaza</div>
+        <div class="num text-[10px] uppercase tracking-[.14em] mt-0.5" style="color:var(--muted-foreground)">Pencatatan penjualan</div>
+      </div>
+      <div class="num text-[9px] font-semibold px-2 py-1 stamp" style="border-radius:3px">KASIR</div>
+    </div>
+
+    <div class="num text-[11px] my-6 flex gap-1" style="color:var(--dots)">
+      <span>· · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</span>
+    </div>
+
+    <div class="enter d1">
+      <label class="block text-[13px] font-medium mb-1.5" for="b-em">Email</label>
+      <input id="b-em" type="email" value="kasir@mafaaza.id"
+        class="w-full text-sm px-3 py-2.5 bg-white" style="border:1px solid var(--border);border-radius:var(--radius)">
+    </div>
+    <div class="enter d2 mt-4">
+      <label class="block text-[13px] font-medium mb-1.5" for="b-pw">Kata sandi</label>
+      <input id="b-pw" type="password" value="password123"
+        class="w-full text-sm px-3 py-2.5 bg-white" style="border:1px solid var(--border);border-radius:var(--radius)">
+    </div>
+    <button class="btn enter d3 w-full mt-6 text-sm font-semibold py-2.5"
+      style="background:var(--primary);color:var(--primary-foreground);border-radius:var(--radius)">Masuk</button>
+  </div>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div class="flex overflow-hidden" style="min-height:580px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">
+
+  <!-- Icon-only rail — content gets the room -->
+  <aside class="w-[58px] shrink-0 flex flex-col items-center py-3 gap-1" style="border-right:1px solid var(--border);background:#F7F6F1">
+    <div class="num text-[13px] font-bold w-9 h-9 grid place-items-center mb-2"
+      style="background:var(--primary);color:var(--primary-foreground);border-radius:var(--radius)">M</div>
+    <a href="#" aria-current="page" title="Hari ini" class="icon w-9 h-9 grid place-items-center" style="border-radius:var(--radius)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></a>
+    <a href="#" title="Penjualan" class="icon w-9 h-9 grid place-items-center" style="border-radius:var(--radius)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11"/></svg></a>
+    <a href="#" title="Pengeluaran" class="icon w-9 h-9 grid place-items-center" style="border-radius:var(--radius)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 11h20"/></svg></a>
+    <a href="#" title="Produk" class="icon w-9 h-9 grid place-items-center" style="border-radius:var(--radius)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/></svg></a>
+    <div class="mt-auto num text-[11px] font-semibold w-9 h-9 grid place-items-center"
+      style="background:#E7E6DE;border-radius:var(--radius)">RZ</div>
+  </aside>
+
+  <!-- Main — narrow measure, like a stack of notas -->
+  <div class="flex-1 min-w-0">
+    <header class="flex items-center justify-between px-6 h-[58px]" style="border-bottom:1px solid var(--border)">
+      <div>
+        <h2 class="text-[15px] font-bold leading-none">Hari ini</h2>
+        <div class="num text-[10px] mt-1" style="color:var(--muted-foreground)">JUM 07 AGU 2026 · 14:20</div>
+      </div>
+      <button class="btn text-[13px] font-semibold px-3.5 py-2"
+        style="background:var(--primary);color:var(--primary-foreground);border-radius:var(--radius)">Catat penjualan</button>
+    </header>
+
+    <div class="p-6" style="max-width:660px">
+      <!-- Totals as a struk: leaders + tear edge -->
+      <div class="enter tear p-5 pb-10 mb-8" style="background:#F7F6F1">
+        <div class="num text-[10px] uppercase tracking-[.14em] mb-4" style="color:var(--muted-foreground)">Rekap hari ini</div>
+        <div class="leader mb-2.5">
+          <span class="text-[13px]">Penjualan · 23 transaksi</span>
+          <span class="leader-dots"></span>
+          <span class="num text-[14px]" style="color:var(--ok)">Rp 4.285.000</span>
+        </div>
+        <div class="leader mb-2.5">
+          <span class="text-[13px]">Pengeluaran · 4 catatan</span>
+          <span class="leader-dots"></span>
+          <span class="num text-[14px]" style="color:var(--attention)">Rp 612.000</span>
+        </div>
+        <div class="leader mb-2.5">
+          <span class="text-[13px]" style="color:var(--muted-foreground)">Belum dibayar · 1 nota</span>
+          <span class="leader-dots"></span>
+          <span class="num text-[14px]" style="color:var(--muted-foreground)">Rp 681.000</span>
+        </div>
+        <div class="num text-[11px] my-4" style="color:var(--dots)">· · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</div>
+        <div class="leader">
+          <span class="text-[13px] font-bold uppercase tracking-wide">Bersih</span>
+          <span class="leader-dots"></span>
+          <span class="num text-[22px] font-semibold">Rp 3.673.000</span>
+        </div>
+      </div>
+
+      <div class="flex items-baseline justify-between mb-3">
+        <h3 class="text-[14px] font-bold">Nota terakhir</h3>
+        <a href="#" class="num text-[11px] underline" style="color:var(--primary)">Lihat semua</a>
+      </div>
+
+      <div class="enter d1" style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+        <div class="rowh px-4 py-3 flex items-center gap-3" style="border-bottom:1px solid var(--border)">
+          <div class="min-w-0 flex-1">
+            <div class="num text-[12px] font-medium">INV/2026/08/0042</div>
+            <div class="text-[12px] truncate" style="color:var(--muted-foreground)">Toko Bu Sari · 6 barang</div>
+          </div>
+          <div class="num text-[9px] px-1.5 py-0.5" style="background:#E4F0E9;color:var(--ok);border-radius:3px">LUNAS</div>
+          <div class="num text-[13px] w-[118px] text-right">Rp 1.850.000</div>
+        </div>
+        <div class="rowh px-4 py-3 flex items-center gap-3" style="border-bottom:1px solid var(--border)">
+          <div class="min-w-0 flex-1">
+            <div class="num text-[12px] font-medium">INV/2026/08/0041</div>
+            <div class="text-[12px] truncate" style="color:var(--muted-foreground)">Warung Pak Budi · 2 barang</div>
+          </div>
+          <div class="num text-[9px] px-1.5 py-0.5" style="background:#E4F0E9;color:var(--ok);border-radius:3px">LUNAS</div>
+          <div class="num text-[13px] w-[118px] text-right">Rp 425.000</div>
+        </div>
+        <div class="rowh px-4 py-3 flex items-center gap-3" style="border-bottom:1px solid var(--border)">
+          <div class="min-w-0 flex-1">
+            <div class="num text-[12px] font-medium">INV/2026/08/0038</div>
+            <div class="text-[12px] truncate" style="color:var(--muted-foreground)">Warung Sejahtera · 9 barang</div>
+          </div>
+          <div class="num text-[9px] px-1.5 py-0.5" style="background:#F7E9D6;color:var(--attention);border-radius:3px">BELUM BAYAR</div>
+          <div class="num text-[13px] w-[118px] text-right">Rp 681.000</div>
+        </div>
+        <div class="rowh px-4 py-3 flex items-center gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="num text-[12px] font-medium">INV/2026/08/0040</div>
+            <div class="text-[12px] truncate" style="color:var(--muted-foreground)">Tanpa pelanggan · 1 barang</div>
+          </div>
+          <div class="num text-[9px] px-1.5 py-0.5" style="background:#EAEAE3;color:var(--muted-foreground);border-radius:3px">DRAF</div>
+          <div class="num text-[13px] w-[118px] text-right">Rp 89.000</div>
+        </div>
+      </div>
+
+      <p class="num text-[11px] mt-6" style="color:var(--muted-foreground)">
+        Signature: garis titik penghubung label→jumlah + tepi sobek pada blok rekap.
+      </p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

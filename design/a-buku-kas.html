@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mafaaza — Arah A: Buku Kas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ─── Token proposal — maps onto shadcn variable names in app/globals.css ─── */
+:root{
+  /* Accounting paper: warm grey-green, deliberately NOT cream #F4F1EA */
+  --background:#EDEFEA;
+  --card:#F7F8F5;
+  --foreground:#1B2A22;
+  --muted-foreground:#5E6B62;
+  --border:#D3D8CE;
+
+  --primary:#16324A;          /* ink navy — accounting ink */
+  --primary-foreground:#F7F8F5;
+  --money-in:#1F6B4A;         /* credit */
+  --money-out:#9E3B2E;        /* debit — "in the red" */
+  --rule:#C2CBBB;             /* ledger ruling */
+  --rule-strong:#16324A;
+
+  --radius:4px;               /* ledgers are not rounded */
+  --font-display:'Bricolage Grotesque',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-num:'JetBrains Mono',monospace;
+
+  /* Row rhythm — every row snaps to this baseline */
+  --row:38px;
+}
+*{box-sizing:border-box}
+body{background:var(--background);color:var(--foreground);font-family:var(--font-body);margin:0}
+.display{font-family:var(--font-display);letter-spacing:-.02em}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* SIGNATURE: ruled baseline grid. Rows sit on the rule, like a ledger page. */
+.ledger{
+  background-image:repeating-linear-gradient(
+    to bottom,transparent 0,transparent calc(var(--row) - 1px),
+    var(--rule) calc(var(--row) - 1px),var(--rule) var(--row));
+  background-position:0 0;
+}
+.ledger-row{height:var(--row);display:grid;align-items:center}
+/* Vertical rule dividing description from amount — the ledger's own device */
+.ledger-amt{border-left:1px solid var(--rule);padding-left:14px;text-align:right}
+
+.rowhover{transition:background-color 120ms linear}
+.rowhover:hover{background-color:#E3E7DD}
+
+.enter{opacity:0;transform:translateY(6px);animation:enter 260ms cubic-bezier(.2,0,0,1) forwards}
+.d1{animation-delay:40ms}.d2{animation-delay:80ms}.d3{animation-delay:120ms}.d4{animation-delay:160ms}
+@keyframes enter{to{opacity:1;transform:none}}
+
+.navitem{transition:background-color 120ms linear,color 120ms linear;border-left:2px solid transparent}
+.navitem:hover{background:#E3E7DD}
+.navitem[aria-current="page"]{background:#E3E7DD;border-left-color:var(--rule-strong);font-weight:600}
+
+.btn{transition:background-color 140ms linear,box-shadow 140ms linear}
+.btn:hover{background:#0F2436}
+.btn:active{transform:translateY(1px)}
+input{transition:border-color 140ms linear,box-shadow 140ms linear}
+input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,50,74,.14)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.sect{border:1px solid var(--border);background:var(--card)}
+</style>
+</head>
+<body class="p-6 md:p-10">
+
+<p class="num text-[11px] uppercase tracking-[.14em]" style="color:var(--muted-foreground)">Arah A — Buku Kas</p>
+<h1 class="display text-2xl font-extrabold mt-1 mb-8">Antarmuka sebagai buku kas: baris bergaris, angka rata kanan</h1>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div class="sect p-8 mb-10" style="max-width:420px">
+  <div class="enter">
+    <div class="flex items-baseline gap-2">
+      <span class="display text-xl font-extrabold">Mafaaza</span>
+      <span class="num text-[10px] uppercase tracking-[.14em]" style="color:var(--muted-foreground)">Buku Kas</span>
+    </div>
+    <p class="text-sm mt-1 mb-6" style="color:var(--muted-foreground)">Catat penjualan dan pengeluaran harian.</p>
+  </div>
+  <div class="enter d1">
+    <label class="block text-[13px] font-medium mb-1.5" for="a-em">Email</label>
+    <input id="a-em" type="email" value="kasir@mafaaza.id"
+      class="w-full text-sm px-3 py-2.5 bg-white" style="border:1px solid var(--border);border-radius:var(--radius)">
+  </div>
+  <div class="enter d2 mt-4">
+    <label class="block text-[13px] font-medium mb-1.5" for="a-pw">Kata sandi</label>
+    <input id="a-pw" type="password" value="password123"
+      class="w-full text-sm px-3 py-2.5 bg-white" style="border:1px solid var(--border);border-radius:var(--radius)">
+  </div>
+  <button class="btn enter d3 w-full mt-6 text-sm font-semibold py-2.5"
+    style="background:var(--primary);color:var(--primary-foreground);border-radius:var(--radius)">Masuk</button>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div class="sect flex overflow-hidden" style="min-height:560px">
+
+  <!-- Sidebar -->
+  <aside class="w-[212px] shrink-0 hidden md:flex flex-col" style="border-right:1px solid var(--border);background:#E9ECE5">
+    <div class="px-4 py-4" style="border-bottom:1px solid var(--border)">
+      <div class="display text-[15px] font-extrabold leading-none">Mafaaza</div>
+      <div class="num text-[10px] uppercase tracking-[.12em] mt-1" style="color:var(--muted-foreground)">Kasir · Shift pagi</div>
+    </div>
+    <nav class="py-2 text-[13px] flex-1">
+      <p class="num text-[10px] uppercase tracking-[.14em] px-4 pt-3 pb-1.5" style="color:var(--muted-foreground)">Ringkasan</p>
+      <a href="#" aria-current="page" class="navitem block px-4 py-2">Hari ini</a>
+      <p class="num text-[10px] uppercase tracking-[.14em] px-4 pt-4 pb-1.5" style="color:var(--muted-foreground)">Transaksi</p>
+      <a href="#" class="navitem block px-4 py-2">Penjualan</a>
+      <a href="#" class="navitem block px-4 py-2">Pengeluaran</a>
+      <p class="num text-[10px] uppercase tracking-[.14em] px-4 pt-4 pb-1.5" style="color:var(--muted-foreground)">Master</p>
+      <a href="#" class="navitem block px-4 py-2">Produk</a>
+      <a href="#" class="navitem block px-4 py-2">Kategori</a>
+      <a href="#" class="navitem block px-4 py-2">Pelanggan</a>
+    </nav>
+    <div class="px-4 py-3 text-[12px]" style="border-top:1px solid var(--border);color:var(--muted-foreground)">
+      <div class="font-medium" style="color:var(--foreground)">Reza</div>
+      <div class="num">admin</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="flex-1 min-w-0">
+    <header class="flex items-center justify-between px-6 h-[56px]" style="border-bottom:1px solid var(--border)">
+      <div class="flex items-baseline gap-3">
+        <h2 class="display text-base font-bold">Hari ini</h2>
+        <span class="num text-[11px]" style="color:var(--muted-foreground)">Jumat, 7 Agustus 2026</span>
+      </div>
+      <button class="btn text-[13px] font-semibold px-3.5 py-2"
+        style="background:var(--primary);color:var(--primary-foreground);border-radius:var(--radius)">Catat penjualan</button>
+    </header>
+
+    <div class="p-6">
+      <!-- Totals as a ledger balance block, not three floating cards -->
+      <div class="enter mb-8" style="border:1px solid var(--border);background:#fff">
+        <div class="ledger">
+          <div class="ledger-row rowhover px-4" style="grid-template-columns:1fr 190px">
+            <span class="text-[13px]">Penjualan masuk</span>
+            <span class="ledger-amt num text-[15px] font-medium" style="color:var(--money-in)">Rp 4.285.000</span>
+          </div>
+          <div class="ledger-row rowhover px-4" style="grid-template-columns:1fr 190px">
+            <span class="text-[13px]">Pengeluaran</span>
+            <span class="ledger-amt num text-[15px] font-medium" style="color:var(--money-out)">Rp 612.000</span>
+          </div>
+          <div class="ledger-row px-4" style="grid-template-columns:1fr 190px;border-top:2px solid var(--rule-strong)">
+            <span class="text-[13px] font-semibold">Selisih</span>
+            <span class="ledger-amt num text-[19px] font-bold">Rp 3.673.000</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-baseline justify-between mb-2">
+        <h3 class="display text-[14px] font-bold">Transaksi terakhir</h3>
+        <span class="num text-[11px]" style="color:var(--muted-foreground)">23 hari ini</span>
+      </div>
+
+      <div class="enter d1" style="border:1px solid var(--border);background:#fff">
+        <div class="ledger-row px-4 num text-[10px] uppercase tracking-[.12em]"
+          style="grid-template-columns:150px 1fr 100px 170px;color:var(--muted-foreground);border-bottom:1px solid var(--rule-strong)">
+          <span>Nomor</span><span>Pelanggan</span><span>Status</span><span class="text-right">Jumlah</span>
+        </div>
+        <div class="ledger">
+          <div class="ledger-row rowhover px-4" style="grid-template-columns:150px 1fr 100px 170px">
+            <span class="num text-[12px]">INV/2026/08/0042</span>
+            <span class="text-[13px] truncate">Toko Bu Sari</span>
+            <span class="num text-[11px]" style="color:var(--money-in)">Lunas</span>
+            <span class="ledger-amt num text-[13px]">Rp 1.850.000</span>
+          </div>
+          <div class="ledger-row rowhover px-4" style="grid-template-columns:150px 1fr 100px 170px">
+            <span class="num text-[12px]">INV/2026/08/0041</span>
+            <span class="text-[13px] truncate">Warung Pak Budi</span>
+            <span class="num text-[11px]" style="color:var(--money-in)">Lunas</span>
+            <span class="ledger-amt num text-[13px]">Rp 425.000</span>
+          </div>
+          <div class="ledger-row rowhover px-4" style="grid-template-columns:150px 1fr 100px 170px">
+            <span class="num text-[12px]">INV/2026/08/0040</span>
+            <span class="text-[13px] truncate" style="color:var(--muted-foreground)">Tanpa pelanggan</span>
+            <span class="num text-[11px]" style="color:var(--muted-foreground)">Draf</span>
+            <span class="ledger-amt num text-[13px]">Rp 89.000</span>
+          </div>
+          <div class="ledger-row rowhover px-4" style="grid-template-columns:150px 1fr 100px 170px">
+            <span class="num text-[12px]">INV/2026/08/0039</span>
+            <span class="text-[13px] truncate">Toko Melati</span>
+            <span class="num text-[11px]" style="color:var(--money-in)">Lunas</span>
+            <span class="ledger-amt num text-[13px]">Rp 1.240.000</span>
+          </div>
+          <div class="ledger-row rowhover px-4" style="grid-template-columns:150px 1fr 100px 170px">
+            <span class="num text-[12px]">INV/2026/08/0038</span>
+            <span class="text-[13px] truncate">Warung Sejahtera</span>
+            <span class="num text-[11px]" style="color:var(--money-out)">Belum bayar</span>
+            <span class="ledger-amt num text-[13px]">Rp 681.000</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="num text-[11px] mt-6" style="color:var(--muted-foreground)">
+        Signature: baris terkunci ke grid bergaris 38px + garis vertikal pemisah jumlah.
+      </p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

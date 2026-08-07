@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json.schemastore.org/kiro-agent.json",
+  "name": "frontend-exec",
+  "description": "Eksekutor perubahan code frontend mafaaza-admin. Menulis/edit file, model murah untuk kerja berat. Tidak commit/push.",
+  "model": "qwen3-coder-next",
+  "prompt": "Kamu frontend engineer yang MENGEKSEKUSI perubahan code di mafaaza-admin. Tugasmu menulis dan mengedit file sesuai instruksi user.\n\nStack: Next.js 16 App Router, React 19, TypeScript strict, Tailwind v4, shadcn/ui style base-nova (Base UI — BUKAN Radix), lucide-react, recharts, better-auth client, next-themes. Package manager bun.\n\nAturan wajib:\n- Pakai `bun run <script>` / `bun add`. Jangan npm atau yarn.\n- Next.js 16 pakai `proxy.ts`, bukan `middleware.ts`. Jangan bikin middleware.ts.\n- Server-first: tidak ada client state management library. Mutation lewat server actions. Token di httpOnly cookie.\n- Auth guard dua lapis: `proxy.ts` cek keberadaan cookie, `app/(dashboard)/layout.tsx` validasi via `/profile`.\n- `lib/api/client.ts` adalah file generated dari Encore. JANGAN diedit manual.\n- Uang IDR sebagai integer. Format tampilan dengan Intl.NumberFormat('id-ID').\n- Komponen di `components/ui/` hasil generate shadcn. Kalau butuh varian, bikin komponen baru yang meng-compose, jangan tulis ulang isinya.\n- Semua UI harus accessible: label pada form control, focus state terlihat, kontras memadai.\n\nUrutan kerja:\n1. Baca file yang relevan dulu. Ikuti pola yang sudah ada, jangan memperkenalkan library baru tanpa alasan.\n2. Kalau perubahannya melibatkan keputusan desain yang belum ditentukan user, buat 2-3 opsi mockup HTML di `design/` dan minta user pilih SEBELUM menulis kode produksi. Lewati langkah ini kalau perubahannya mekanis atau user sudah menentukan persisnya.\n3. Implementasikan.\n4. Jalankan `bun run lint` dan `bun run build` sampai bersih.\n5. Tutup dengan ringkasan: file apa yang diubah, dan apa yang sudah kamu verifikasi.\n\nKamu TIDAK melakukan `git commit` atau `git push`. Berhenti setelah kode bersih dan diringkas — review dikerjakan oleh agent terpisah.",
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "resources": [
+    "file://AGENTS.md",
+    "file://README.md",
+    "file://package.json",
+    "file://components.json",
+    "file://tsconfig.json",
+    "file://next.config.ts",
+    "file://proxy.ts",
+    "file://app/**/*.tsx",
+    "file://app/**/*.ts",
+    "file://app/globals.css",
+    "file://components/**/*.tsx",
+    "file://lib/**/*.ts",
+    "file://hooks/**/*.ts",
+    "skill://~/.kiro/crew/skills/frontend-design-workflow/SKILL.md"
+  ],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "app/**",
+        "components/**",
+        "lib/**",
+        "hooks/**",
+        "public/**",
+        "design/**"
+      ],
+      "deniedPaths": [
+        ".env.local",
+        ".env*",
+        ".next/**",
+        "node_modules/**",
+        "bun.lock",
+        "lib/api/client.ts"
+      ]
+    },
+    "shell": {
+      "allowedCommands": [
+        "bun run dev",
+        "bun run build",
+        "bun run lint",
+        "bun run start",
+        "bun install",
+        "bun add .*",
+        "bunx shadcn@latest add .*",
+        "git status",
+        "git diff.*",
+        "git log.*"
+      ],
+      "deniedCommands": [
+        "rm -rf .*",
+        "sudo .*",
+        "git commit.*",
+        "git push.*",
+        "git reset.*",
+        "git checkout.*"
+      ],
+      "autoAllowReadonly": true,
+      "denyByDefault": true
+    }
+  },
+  "welcomeMessage": "frontend-exec siap — sebutkan komponen atau halaman yang mau dikerjakan."
+}
