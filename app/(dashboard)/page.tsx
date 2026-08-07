@@ -1,105 +1,92 @@
-import { cookies } from "next/headers";
-import { Package, ShoppingCart } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ReceiptText, Package, Users, Wallet } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { getApiClientFromCookies } from "@/lib/api";
+const stats = [
+  {
+    title: "Total Penjualan",
+    value: "Rp 12.500.000",
+    icon: ReceiptText,
+    trend: "+12% dari kemarin",
+    color: "text-emerald-500",
+  },
+  {
+    title: "Produk",
+    value: "48",
+    icon: Package,
+    trend: "3 produk baru",
+    color: "text-blue-500",
+  },
+  {
+    title: "Pelanggan",
+    value: "127",
+    icon: Users,
+    trend: "+5 minggu ini",
+    color: "text-purple-500",
+  },
+  {
+    title: "Pengeluaran",
+    value: "Rp 3.200.000",
+    icon: Wallet,
+    trend: "-8% dari kemarin",
+    color: "text-orange-500",
+  },
+];
 
-const idr = new Intl.NumberFormat("id-ID", {
-  style: "currency",
-  currency: "IDR",
-  maximumFractionDigits: 0,
-});
-
-export default async function DashboardPage() {
-  const api = getApiClientFromCookies((await cookies()).toString());
-
-  // Fetched in parallel — these are independent reads.
-  const [products, orders] = await Promise.all([
-    api.masters.listProducts({ limit: 1 }),
-    api.masters.listOrders({ limit: 5 }),
-  ]);
-
-  const revenue = orders.orders
-    .filter((o) => o.status === "paid")
-    .reduce((sum, o) => sum + o.totalAmount, 0);
-
+export default function DashboardPage() {
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardDescription className="flex items-center gap-2">
-              <Package className="size-4" />
-              Total Produk
-            </CardDescription>
-            <CardTitle className="text-3xl tabular-nums">
-              {products.total}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+    <div className="animate-in fade-in duration-500">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Ringkasan aktivitas bisnis hari ini
+        </p>
+      </header>
 
-        <Card>
-          <CardHeader>
-            <CardDescription className="flex items-center gap-2">
-              <ShoppingCart className="size-4" />
-              Total Transaksi
-            </CardDescription>
-            <CardTitle className="text-3xl tabular-nums">
-              {orders.total}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardDescription>Pendapatan (5 transaksi terakhir)</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">
-              {idr.format(revenue)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat, i) => (
+          <Card key={i} className="transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-muted-foreground">{stat.trend}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaksi Terakhir</CardTitle>
-          <CardDescription>
-            {orders.total === 0
-              ? "Belum ada transaksi tercatat."
-              : `Menampilkan ${orders.orders.length} dari ${orders.total} transaksi.`}
-          </CardDescription>
-        </CardHeader>
-        {orders.orders.length > 0 && (
-          <CardContent>
-            <ul className="divide-y">
-              {orders.orders.map((order) => (
-                <li
-                  key={order.id}
-                  className="flex items-center justify-between py-3 text-sm"
-                >
-                  <div className="grid gap-0.5">
-                    <span className="font-medium">
-                      {order.invoiceNumber ?? "(draf)"}
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {order.customerName ?? "Tanpa pelanggan"} · {order.status}
-                    </span>
-                  </div>
-                  <span className="tabular-nums">
-                    {idr.format(order.totalAmount)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Ringkasan Penjualan</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <p className="text-sm text-muted-foreground">
+              Statistik penjualan akan ditampilkan di sini setelah integrasi API selesai.
+            </p>
           </CardContent>
-        )}
-      </Card>
+        </Card>
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Pengeluaran Terbaru</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-muted" />
+                    <span className="text-muted-foreground">Pengeluaran operasional</span>
+                  </div>
+                  <span className="font-medium">Rp 150.000</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
