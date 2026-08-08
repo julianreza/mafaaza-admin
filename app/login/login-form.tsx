@@ -53,17 +53,22 @@ export function LoginForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Masuk</CardTitle>
-        <CardDescription>
+    <Card className="bg-card/70 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 ring-foreground/5 shadow-xl hover:scale-100">
+      <CardHeader className="space-y-2 pb-6">
+        <CardTitle className="text-2xl font-semibold tracking-tight">
+          Masuk
+        </CardTitle>
+        <CardDescription className="text-sm text-muted-foreground">
           Gunakan email dan kata sandi akun Anda.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={onSubmit} className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+        <form onSubmit={onSubmit} aria-busy={pending} className="grid gap-5">
+          {/* Email field */}
+          <div className="grid gap-2 animate-in fade-in slide-in-from-bottom-1 duration-500 [animation-delay:100ms] fill-mode-both">
+            <Label htmlFor="email" className="text-sm font-medium">
+              Email
+            </Label>
             <Input
               id="email"
               name="email"
@@ -74,11 +79,15 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={pending}
+              className="h-10 border-input/80 hover:border-brand/40 focus-visible:border-brand focus-visible:ring-brand/25 transition-colors"
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="password">Kata sandi</Label>
+          {/* Password field */}
+          <div className="grid gap-2 animate-in fade-in slide-in-from-bottom-1 duration-500 [animation-delay:200ms] fill-mode-both">
+            <Label htmlFor="password" className="text-sm font-medium">
+              Kata sandi
+            </Label>
             <Input
               id="password"
               name="password"
@@ -89,22 +98,39 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={pending}
+              className="h-10 border-input/80 hover:border-brand/40 focus-visible:border-brand focus-visible:ring-brand/25 transition-colors"
             />
           </div>
 
           {error && (
-            <p
+            <div
               role="alert"
               aria-live="polite"
-              className="text-destructive text-sm"
+              className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-destructive text-sm animate-in fade-in slide-in-from-top-1 duration-300"
             >
               {error}
-            </p>
+            </div>
           )}
 
-          <Button type="submit" className="w-full" disabled={pending}>
-            {pending && <Loader2 className="animate-spin" />}
-            {pending ? "Memproses..." : "Masuk"}
+          <Button
+            type="submit"
+            size="lg"
+            className="h-11 w-full bg-gradient-to-r from-brand to-accent-2 text-white hover:from-brand/90 hover:to-accent-2/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-glow-gradient-brand active:translate-y-0 transition-all duration-200 disabled:hover:translate-y-0 animate-in fade-in slide-in-from-bottom-1 duration-500 [animation-delay:300ms] fill-mode-both"
+            disabled={pending}
+          >
+            <span className="relative flex items-center justify-center gap-2">
+              <span
+                className={`inline-flex items-center gap-2 transition-opacity duration-200 ${pending ? "opacity-0" : "opacity-100"}`}
+              >
+                Masuk
+              </span>
+              <span
+                className={`absolute inset-0 inline-flex items-center justify-center gap-2 transition-opacity duration-200 ${pending ? "opacity-100" : "opacity-0"}`}
+              >
+                <Loader2 className="size-4 animate-spin" />
+                Memproses...
+              </span>
+            </span>
           </Button>
         </form>
       </CardContent>

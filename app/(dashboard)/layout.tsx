@@ -43,16 +43,16 @@ export default async function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar user={user} />
-      <SidebarInset className="animate-in fade-in duration-300">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-all duration-300 hover:bg-sidebar-accent/30">
+      <SidebarInset className="animate-in fade-in duration-300 bg-gradient-to-br from-brand/5 via-transparent to-accent-2/5">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-foreground/10 bg-card/40 backdrop-blur-md px-4 transition-all duration-300 hover:bg-sidebar-accent/30 shadow-glow-gradient-brand">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"
           />
-          <h1 className="text-base font-medium">Mafaaza Admin</h1>
+          <h1 className="text-base font-semibold tracking-tight text-sidebar-primary-foreground">Mafaaza Admin</h1>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 animate-in slide-in-from-bottom-4 duration-500">{children}</main>
+        <main className="flex flex-1 flex-col gap-4 p-4 animate-in slide-in-from-bottom-4 duration-500 bg-card/70 backdrop-blur-sm">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

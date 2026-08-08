@@ -70,12 +70,12 @@ export function NavUser({ user }: NavUserProps) {
             }
           >
             <div className="flex items-center gap-3 transition-transform hover:scale-105">
-              <Avatar className="size-8 rounded-lg ring-2 ring-transparent transition-all hover:ring-sidebar-primary/50">
-                <AvatarFallback className="rounded-lg">{initials(user.name)}</AvatarFallback>
+              <Avatar className="size-8 rounded-lg ring-2 ring-brand/40 shadow-glow-gradient-brand hover:ring-accent-2/60 transition-all">
+                <AvatarFallback className="rounded-lg bg-gradient-to-br from-brand to-accent-2 text-white">{initials(user.name)}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight hidden md:block">
-                <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate font-semibold text-sidebar-primary-foreground">{user.name}</span>
+                <span className="truncate text-xs text-sidebar-foreground">{user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4 transition-transform group-data-[popup-open]:rotate-180" />
             </div>
@@ -87,23 +87,22 @@ export function NavUser({ user }: NavUserProps) {
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="size-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg">{initials(user.name)}</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">{user.role}</span>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <Avatar className="size-8 rounded-lg">
+                    <AvatarFallback className="rounded-lg bg-gradient-to-br from-brand to-accent-2 text-white">{initials(user.name)}</AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold text-sidebar-primary-foreground">{user.name}</span>
+                    <span className="text-muted-foreground truncate text-xs">{user.role}</span>
+                  </div>
                 </div>
-              </div>
-            </DropdownMenuLabel>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuLabel className="text-muted-foreground text-xs px-2 py-1.5">
-              Tema
-            </DropdownMenuLabel>
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => setTheme("light")} className="transition-colors hover:bg-accent">
                 <Sun /> Terang
@@ -118,14 +117,16 @@ export function NavUser({ user }: NavUserProps) {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem
-              onClick={handleSignOut}
-              disabled={signingOut}
-              variant="destructive"
-              className="transition-colors hover:bg-destructive/10 hover:text-destructive"
-            >
-              <LogOut /> {signingOut ? "Keluar..." : "Keluar"}
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                onClick={handleSignOut}
+                disabled={signingOut}
+                variant="destructive"
+                className="transition-colors hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut /> {signingOut ? "Keluar..." : "Keluar"}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

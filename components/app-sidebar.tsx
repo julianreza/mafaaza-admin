@@ -66,12 +66,12 @@ export function AppSidebar({ user }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/" />}>
-              <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg shadow-sm transition-transform hover:scale-105 hover:rotate-3">
+              <div className="bg-gradient-to-br from-brand to-accent-2 text-white flex aspect-square size-8 items-center justify-center rounded-lg shadow-glow-brand transition-transform hover:scale-105 hover:rotate-3">
                 <ReceiptText className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Mafaaza</span>
-                <span className="truncate text-xs">Pencatatan Penjualan</span>
+                <span className="truncate font-semibold text-sidebar-primary-foreground">Mafaaza</span>
+                <span className="truncate text-xs text-sidebar-foreground">Pencatatan Penjualan</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -92,14 +92,14 @@ export function AppSidebar({ user }: AppSidebarProps) {
                       ? pathname === "/"
                       : pathname.startsWith(item.href);
                   return (
-                    <SidebarMenuItem key={item.href}>
+                    <SidebarMenuItem key={item.href} className={isActive ? "group/active" : ""}>
                       <SidebarMenuButton
                         isActive={isActive}
                         tooltip={item.title}
                         render={<Link href={item.href} />}
-                        className={isActive ? "bg-sidebar-accent/50 shadow-sm" : ""}
+                        className={isActive ? "bg-gradient-to-r from-brand/20 to-accent-2/20 shadow-sm ring-1 ring-foreground/10" : ""}
                       >
-                        <div className={isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground"}>
+                        <div className={isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground group-hover/active:text-sidebar-primary-foreground transition-colors"}>
                           <item.icon className={isActive ? "stroke-[2.5px]" : "stroke-[2px]"} />
                         </div>
                         <span className={isActive ? "font-medium" : "font-normal"}>{item.title}</span>
