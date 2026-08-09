@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ReceiptText, Package, Users, Wallet } from "lucide-react";
+import { Package, ReceiptText, Users, Wallet } from "lucide-react";
 
 const stats = [
   {
@@ -7,88 +7,115 @@ const stats = [
     value: "Rp 12.500.000",
     icon: ReceiptText,
     trend: "+12% dari kemarin",
-    gradient: "from-emerald-500 to-teal-500",
+    surface: "from-emerald-500/15 via-card to-card",
+    iconSurface: "from-emerald-500 to-teal-500",
+    trendColor: "text-emerald-700 dark:text-emerald-400",
   },
   {
     title: "Produk",
     value: "48",
     icon: Package,
     trend: "3 produk baru",
-    gradient: "from-blue-500 to-indigo-500",
+    surface: "from-blue-500/15 via-card to-card",
+    iconSurface: "from-blue-500 to-indigo-500",
+    trendColor: "text-blue-700 dark:text-blue-400",
   },
   {
     title: "Pelanggan",
     value: "127",
     icon: Users,
     trend: "+5 minggu ini",
-    gradient: "from-purple-500 to-pink-500",
+    surface: "from-violet-500/15 via-card to-card",
+    iconSurface: "from-violet-500 to-fuchsia-500",
+    trendColor: "text-violet-700 dark:text-violet-400",
   },
   {
     title: "Pengeluaran",
     value: "Rp 3.200.000",
     icon: Wallet,
     trend: "-8% dari kemarin",
-    gradient: "from-orange-500 to-red-500",
+    surface: "from-amber-500/15 via-card to-card",
+    iconSurface: "from-amber-500 to-orange-500",
+    trendColor: "text-amber-700 dark:text-amber-400",
   },
 ];
 
+const weeklyBars = [42, 58, 48, 76, 64, 88, 70];
+
 export default function DashboardPage() {
   return (
-    <div className="animate-in fade-in duration-500">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Ringkasan aktivitas bisnis hari ini
-        </p>
-      </header>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#4f46e5] via-[#7c3aed] to-[#f59e0b] px-6 py-7 text-white shadow-xl shadow-brand/20 animate-gradient-orbit sm:px-8">
+        <div aria-hidden="true" className="absolute -right-16 -top-20 size-56 rounded-full bg-white/15 blur-3xl" />
+        <div aria-hidden="true" className="absolute -bottom-24 left-1/3 size-64 rounded-full bg-amber-200/20 blur-3xl" />
+        <div className="relative max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">Ringkasan bisnis</p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Pantau penjualan, stok, dan pelanggan dalam satu tempat.</h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-white/85">Gunakan ringkasan ini untuk melihat ritme bisnis hari ini dan menentukan langkah berikutnya.</p>
+        </div>
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <section aria-label="Statistik utama" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title} className="card-3d shadow-sm hover:shadow-xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <div className={`bg-gradient-to-br ${stat.gradient} text-white rounded-lg p-1.5 shadow-sm`}>
-                <stat.icon className="h-3.5 w-3.5" />
+          <Card key={stat.title} className={`overflow-hidden border-border/70 bg-gradient-to-br ${stat.surface} shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-foreground">{stat.title}</CardTitle>
+              <div className={`flex size-10 items-center justify-center rounded-xl bg-gradient-to-br ${stat.iconSurface} text-white shadow-sm transition-transform duration-300 hover:scale-105`}>
+                <stat.icon aria-hidden="true" className="size-5" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold bg-gradient-to-r from-brand to-accent-2 bg-clip-text text-transparent">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.trend}</p>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{stat.value}</p>
+              <p className={`mt-2 text-xs font-semibold ${stat.trendColor}`}>{stat.trend}</p>
             </CardContent>
           </Card>
         ))}
-      </div>
+      </section>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader className="border-b border-foreground/10 bg-gradient-to-r from-brand/5 via-transparent to-accent-2/5">
-            <CardTitle className="text-base">Ringkasan Penjualan</CardTitle>
+      <section className="grid gap-4 xl:grid-cols-5">
+        <Card className="overflow-hidden border-border/70 bg-card/90 shadow-sm backdrop-blur-sm xl:col-span-3">
+          <CardHeader className="border-b border-border/70 bg-gradient-to-r from-brand/10 via-transparent to-accent-2/10">
+            <CardTitle className="text-base font-semibold text-foreground">Performa penjualan minggu ini</CardTitle>
           </CardHeader>
-          <CardContent className="pl-2">
-            <p className="text-sm text-muted-foreground">
-              Statistik penjualan akan ditampilkan di sini setelah integrasi API selesai.
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="col-span-3">
-          <CardHeader className="border-b border-foreground/10 bg-gradient-to-r from-brand/5 via-transparent to-accent-2/5">
-            <CardTitle className="text-base">Pengeluaran Terbaru</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full bg-gradient-to-br from-brand to-accent-2`} />
-                    <span className="text-muted-foreground">Pengeluaran operasional</span>
+          <CardContent className="pt-6">
+            <div className="flex items-end gap-3" aria-label="Grafik penjualan tujuh hari terakhir">
+              {weeklyBars.map((height, index) => (
+                <div key={height} className="flex flex-1 flex-col items-center gap-2">
+                  <div className="flex h-28 w-full items-end rounded-lg bg-muted/70 p-1">
+                    <div
+                      aria-hidden="true"
+                      className="w-full rounded-md bg-gradient-to-t from-brand to-brand-accent transition-all duration-700"
+                      style={{ height: `${height}%`, transitionDelay: `${index * 70}ms` }}
+                    />
                   </div>
-                  <span className="font-medium bg-gradient-to-r from-brand to-accent-2 bg-clip-text text-transparent">Rp 150.000</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">{["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"][index]}</span>
                 </div>
               ))}
             </div>
+            <div className="mt-6 flex items-center justify-between rounded-xl bg-brand-soft/70 px-4 py-3 text-sm dark:bg-brand-soft/40">
+              <span className="text-muted-foreground">Penjualan hari ini</span>
+              <span className="font-semibold text-foreground">Rp 4.200.000</span>
+            </div>
           </CardContent>
         </Card>
-      </div>
+
+        <Card className="border-border/70 bg-card/90 shadow-sm backdrop-blur-sm xl:col-span-2">
+          <CardHeader className="border-b border-border/70 bg-gradient-to-r from-accent-2/10 via-transparent to-brand/10">
+            <CardTitle className="text-base font-semibold text-foreground">Pengeluaran terbaru</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-5">
+            {["Belanja operasional", "Transportasi", "Perlengkapan toko"].map((item, index) => (
+              <div key={item} className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span aria-hidden="true" className={`size-2.5 shrink-0 rounded-full ${["bg-amber-500", "bg-violet-500", "bg-teal-500"][index]}`} />
+                  <span className="truncate text-sm font-medium text-foreground">{item}</span>
+                </div>
+                <span className="shrink-0 text-sm font-semibold text-foreground">Rp 150.000</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

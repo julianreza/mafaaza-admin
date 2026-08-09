@@ -61,48 +61,48 @@ export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <Sidebar collapsible="icon" className="transition-all duration-300 ease-in-out">
-      <SidebarHeader>
+    <Sidebar collapsible="icon" className="relative overflow-hidden border-r border-sidebar-border bg-gradient-to-b from-sidebar via-sidebar to-brand-soft/50 dark:to-brand/10">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-16 top-1/3 size-40 rounded-full bg-accent-2/10 blur-3xl animate-float-slow" />
+
+      <SidebarHeader className="relative z-10 border-b border-sidebar-border/70">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/" />}>
-              <div className="bg-gradient-to-br from-brand to-accent-2 text-white flex aspect-square size-8 items-center justify-center rounded-lg shadow-glow-brand transition-transform hover:scale-105 hover:rotate-3">
-                <ReceiptText className="size-4" />
+              <div className="flex aspect-square size-9 items-center justify-center rounded-xl bg-gradient-to-r from-brand via-brand-accent to-accent-2 text-white shadow-sm animate-gradient-orbit">
+                <ReceiptText aria-hidden="true" className="size-5" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold text-sidebar-primary-foreground">Mafaaza</span>
-                <span className="truncate text-xs text-sidebar-foreground">Pencatatan Penjualan</span>
+                <span className="truncate font-bold text-sidebar-foreground">Mafaaza</span>
+                <span className="truncate text-xs text-muted-foreground">Pencatatan Penjualan</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="animate-in slide-in-from-left duration-300">
+      <SidebarContent className="relative z-10 py-2">
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-foreground/60 font-semibold">
+          <SidebarGroup key={group.label} className="py-2">
+            <SidebarGroupLabel className="px-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/55">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map((item, i) => {
+                {group.items.map((item) => {
                   const isActive =
                     item.href === "/"
                       ? pathname === "/"
                       : pathname.startsWith(item.href);
                   return (
-                    <SidebarMenuItem key={item.href} className={isActive ? "group/active" : ""}>
+                    <SidebarMenuItem key={item.href} className="px-1">
                       <SidebarMenuButton
                         isActive={isActive}
                         tooltip={item.title}
                         render={<Link href={item.href} />}
-                        className={isActive ? "bg-gradient-to-r from-brand/20 to-accent-2/20 shadow-sm ring-1 ring-foreground/10" : ""}
+                        className={isActive ? "border-l-2 border-brand bg-brand/10 text-brand shadow-sm dark:bg-brand/20" : "border-l-2 border-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-brand"}
                       >
-                        <div className={isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground group-hover/active:text-sidebar-primary-foreground transition-colors"}>
-                          <item.icon className={isActive ? "stroke-[2.5px]" : "stroke-[2px]"} />
-                        </div>
-                        <span className={isActive ? "font-medium" : "font-normal"}>{item.title}</span>
+                        <item.icon className="size-4" />
+                        <span className={isActive ? "font-semibold" : "font-medium"}>{item.title}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
@@ -113,7 +113,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="animate-in slide-in-from-bottom duration-300">
+      <SidebarFooter className="relative z-10 border-t border-sidebar-border/70">
         <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
