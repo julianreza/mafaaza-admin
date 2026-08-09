@@ -31,6 +31,7 @@ import {
 
 const SESSION_ERROR = "Sesi Anda telah berakhir. Silakan masuk kembali."
 const GENERIC_ERROR = "Terjadi kesalahan. Silakan coba lagi."
+const AUTHZ_ERROR = "Anda tidak memiliki izin untuk melakukan tindakan ini."
 
 function fd(entries: Record<string, string>) {
   const f = new FormData()
@@ -49,6 +50,13 @@ describe("createProductAction", () => {
     profile.mockRejectedValueOnce(new Error("401 unauthorized"))
     const res = await createProductAction({ ok: false }, fd({ name: "Kopi", price: "1000" }))
     expect(res).toEqual({ ok: false, error: SESSION_ERROR })
+    expect(createProduct).not.toHaveBeenCalled()
+  })
+
+  it("rejects a non-admin role with an authz error and never calls the API", async () => {
+    profile.mockResolvedValueOnce({ email: "staff@mafaaza.test", role: "user" })
+    const res = await createProductAction({ ok: false }, fd({ name: "Kopi", price: "1000" }))
+    expect(res).toEqual({ ok: false, error: AUTHZ_ERROR })
     expect(createProduct).not.toHaveBeenCalled()
   })
 
@@ -112,6 +120,37 @@ describe("updateProductAction", () => {
     expect(updateProduct).not.toHaveBeenCalled()
   })
 
+  it("rejects a non-admin role and never calls the API", async () => {
+    profile.mockResolvedValueOnce({ email: "staff@mafaaza.test", role: "user" })
+    const res = await updateProductAction("p1", fd({ name: "Kopi", price: "1000" }))
+    expect(res).toEqual({ ok: false, error: AUTHZ_ERROR })
+    expect(updateProduct).not.toHaveBeenCalled()
+  })
+
+  it("does NOT send categoryId when the field is absent (must not wipe the category)", async () => {
+    updateProduct.mockResolvedValueOnce({ product: { id: "p1" } })
+    // The edit form has no category picker, so an ordinary edit omits categoryId
+    // entirely. Regression lock for the categoryId-wipe bug: the params sent to
+    // the backend must not carry a categoryId key at all.
+    await updateProductAction("p1", fd({ name: "Kopi", price: "1000" }))
+    const [, params] = updateProduct.mock.calls[0]
+    expect(params).not.toHaveProperty("categoryId")
+  })
+
+  it("sets categoryId only when the field is explicitly present", async () => {
+    updateProduct.mockResolvedValueOnce({ product: { id: "p1" } })
+    await updateProductAction("p1", fd({ name: "Kopi", price: "1000", categoryId: "cat-9" }))
+    const [, params] = updateProduct.mock.calls[0]
+    expect(params.categoryId).toBe("cat-9")
+  })
+
+  it("treats an explicitly empty categoryId as an intentional clear (null)", async () => {
+    updateProduct.mockResolvedValueOnce({ product: { id: "p1" } })
+    await updateProductAction("p1", fd({ name: "Kopi", price: "1000", categoryId: "" }))
+    const [, params] = updateProduct.mock.calls[0]
+    expect(params.categoryId).toBeNull()
+  })
+
   it("updates mapped fields, maps isActive checkbox, and revalidates", async () => {
     updateProduct.mockResolvedValueOnce({ product: { id: "p1" } })
     const res = await updateProductAction(
@@ -156,6 +195,13 @@ describe("deleteProductAction (soft delete)", () => {
     profile.mockRejectedValueOnce(new Error("401"))
     const res = await deleteProductAction("p1")
     expect(res).toEqual({ ok: false, error: SESSION_ERROR })
+    expect(deleteProduct).not.toHaveBeenCalled()
+  })
+
+  it("rejects a non-admin role and never calls the API", async () => {
+    profile.mockResolvedValueOnce({ email: "staff@mafaaza.test", role: "user" })
+    const res = await deleteProductAction("p1")
+    expect(res).toEqual({ ok: false, error: AUTHZ_ERROR })
     expect(deleteProduct).not.toHaveBeenCalled()
   })
 
