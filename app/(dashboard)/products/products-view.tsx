@@ -187,10 +187,10 @@ export function ProductsView({
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
-                            <DropdownMenuTrigger>
-                              <Button variant="ghost" size="icon-sm" className="h-8 w-8">
-                                <EllipsisIcon className="size-4" />
-                              </Button>
+                            <DropdownMenuTrigger
+                              render={<Button variant="ghost" size="icon-sm" className="h-8 w-8" />}
+                            >
+                              <EllipsisIcon className="size-4" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
                               <DropdownMenuItem onClick={() => handleEdit(product)}>

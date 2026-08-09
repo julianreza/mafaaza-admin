@@ -19,14 +19,24 @@ export default async function ProductsPage({
     redirect("/login")
   }
 
-  const pageNum = page ? parseInt(page, 10) : 1
+  const parsedPage = page ? parseInt(page, 10) : 1
+  const pageNum = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1
   const limit = 20
 
-  const result = await api.masters.listProducts({
-    page: pageNum,
-    limit,
-    search: search || undefined,
-  })
+  // Guard the fetch: the session is already validated above, but the backend
+  // call can still fail (network/500). Degrade to an empty list rather than
+  // throwing an unhandled error that blanks the whole route.
+  let result: Awaited<ReturnType<typeof api.masters.listProducts>>
+  try {
+    result = await api.masters.listProducts({
+      page: pageNum,
+      limit,
+      search: search || undefined,
+    })
+  } catch (err) {
+    console.error("[ProductsPage] listProducts failed:", err)
+    result = { products: [], total: 0, page: pageNum, limit }
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">

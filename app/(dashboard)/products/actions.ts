@@ -3,12 +3,43 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 
-import { getApiClientFromCookies } from "@/lib/api"
+import { getApiClientFromCookies, type Client } from "@/lib/api"
+
+type ActionResult = { ok: true } | { ok: false; error: string }
+
+// Generic, client-safe messages. Raw backend/Encore errors are logged
+// server-side only — never returned to the browser (they can leak internal
+// details, stack context, or endpoint shape).
+const GENERIC_ERROR = "Terjadi kesalahan. Silakan coba lagi."
+const SESSION_ERROR = "Sesi Anda telah berakhir. Silakan masuk kembali."
+
+/**
+ * Resolve an API client whose session has been verified against the backend's
+ * protected `/profile` endpoint.
+ *
+ * Each server action calls this itself and does NOT lean on the `(dashboard)`
+ * layout guard: a Server Action is a POST endpoint that can be invoked directly
+ * without ever rendering the guarded layout, so authorization must be checked
+ * here too (defense in depth). Returns a generic session error on failure — the
+ * underlying reason is never surfaced to the client.
+ */
+async function getAuthedApi(): Promise<{ api: Client } | { error: string }> {
+  const api = getApiClientFromCookies((await cookies()).toString())
+  try {
+    await api.mafaaza_api.profile()
+    return { api }
+  } catch {
+    return { error: SESSION_ERROR }
+  }
+}
 
 export async function createProductAction(
   prevState: { ok: boolean; error?: string },
   formData: FormData
-) {
+): Promise<ActionResult> {
+  const auth = await getAuthedApi()
+  if ("error" in auth) return { ok: false, error: auth.error }
+
   const name = formData.get("name") as string
   const sku = formData.get("sku") as string | undefined
   const priceStr = formData.get("price") as string | undefined
@@ -26,8 +57,7 @@ export async function createProductAction(
   }
 
   try {
-    const api = getApiClientFromCookies((await cookies()).toString())
-    await api.masters.createProduct({
+    await auth.api.masters.createProduct({
       name,
       sku: sku || undefined,
       price,
@@ -38,15 +68,18 @@ export async function createProductAction(
     revalidatePath("/products")
     return { ok: true }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Gagal membuat produk."
-    return { ok: false, error: message }
+    console.error("[createProductAction] failed:", err)
+    return { ok: false, error: GENERIC_ERROR }
   }
 }
 
 export async function updateProductAction(
   id: string,
   formData: FormData
-) {
+): Promise<ActionResult> {
+  const auth = await getAuthedApi()
+  if ("error" in auth) return { ok: false, error: auth.error }
+
   const categoryId = formData.get("categoryId") as string | undefined
   const name = formData.get("name") as string | undefined
   const sku = formData.get("sku") as string | undefined
@@ -66,7 +99,6 @@ export async function updateProductAction(
   }
 
   try {
-    const api = getApiClientFromCookies((await cookies()).toString())
     const params: Record<string, unknown> = {}
 
     if (categoryId !== undefined) params.categoryId = categoryId || null
@@ -77,25 +109,27 @@ export async function updateProductAction(
     if (description !== undefined) params.description = description || null
     if (isActive !== undefined) params.isActive = isActive === "on"
 
-    await api.masters.updateProduct(id, params)
+    await auth.api.masters.updateProduct(id, params)
 
     revalidatePath("/products")
     return { ok: true }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Gagal memperbarui produk."
-    return { ok: false, error: message }
+    console.error("[updateProductAction] failed:", err)
+    return { ok: false, error: GENERIC_ERROR }
   }
 }
 
-export async function deleteProductAction(id: string) {
+export async function deleteProductAction(id: string): Promise<ActionResult> {
+  const auth = await getAuthedApi()
+  if ("error" in auth) return { ok: false, error: auth.error }
+
   try {
-    const api = getApiClientFromCookies((await cookies()).toString())
-    await api.masters.deleteProduct(id, { force: false })
+    await auth.api.masters.deleteProduct(id, { force: false })
 
     revalidatePath("/products")
     return { ok: true }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Gagal menghapus produk."
-    return { ok: false, error: message }
+    console.error("[deleteProductAction] failed:", err)
+    return { ok: false, error: GENERIC_ERROR }
   }
 }
