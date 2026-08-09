@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# KiroCrew crew conventions (local-only)
+.kiro/steering/
