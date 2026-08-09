@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { ReceiptText } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -43,16 +44,30 @@ export default async function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar user={user} />
-      <SidebarInset className="animate-in fade-in duration-300 bg-gradient-to-br from-brand/5 via-transparent to-accent-2/5">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-foreground/10 bg-card/40 backdrop-blur-md px-4 transition-all duration-300 hover:bg-sidebar-accent/30 shadow-glow-gradient-brand">
-          <SidebarTrigger className="-ml-1" />
+      <SidebarInset className="relative min-h-svh overflow-hidden bg-gradient-to-br from-brand-soft via-background to-accent-2-soft/60 dark:from-brand-soft/35 dark:via-background dark:to-accent-2-soft/25">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 right-[12%] size-80 rounded-full bg-brand/10 blur-3xl animate-float-slow" />
+          <div className="absolute -bottom-32 left-[18%] size-96 rounded-full bg-accent-2/10 blur-3xl animate-float-slow [animation-delay:8s]" />
+          <div className="absolute inset-0 bg-grid-pattern opacity-40 dark:opacity-20" />
+        </div>
+
+        <header className="relative z-10 flex h-16 shrink-0 items-center gap-3 border-b border-border/80 bg-background/85 px-4 backdrop-blur-xl dark:bg-card/85 sm:px-6">
+          <SidebarTrigger className="-ml-1 transition-colors hover:bg-brand/10 hover:text-brand" />
           <Separator
             orientation="vertical"
-            className="mr-2 data-[orientation=vertical]:h-4"
+            className="data-[orientation=vertical]:h-5"
           />
-          <h1 className="text-base font-semibold tracking-tight text-sidebar-primary-foreground">Mafaaza Admin</h1>
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-r from-brand via-brand-accent to-accent-2 text-white shadow-sm animate-gradient-orbit">
+              <ReceiptText aria-hidden="true" className="size-4" />
+            </div>
+            <div className="grid leading-tight">
+              <h1 className="text-sm font-semibold text-foreground">Mafaaza</h1>
+              <p className="text-xs text-muted-foreground">Admin Dashboard</p>
+            </div>
+          </div>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 animate-in slide-in-from-bottom-4 duration-500 bg-card/70 backdrop-blur-sm">{children}</main>
+        <main className="relative z-10 flex flex-1 flex-col p-4 sm:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

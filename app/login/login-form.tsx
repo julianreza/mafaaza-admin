@@ -53,9 +53,9 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="bg-card/70 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 ring-foreground/5 shadow-xl hover:scale-100">
+    <Card className="bg-card/70 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 ring-foreground/5 shadow-2xl hover:card-3d transition-all duration-300">
       <CardHeader className="space-y-2 pb-6">
-        <CardTitle className="text-2xl font-semibold tracking-tight">
+        <CardTitle className="text-2xl font-bold tracking-tight bg-gradient-to-r from-brand to-accent-2 bg-clip-text text-transparent">
           Masuk
         </CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
@@ -66,7 +66,7 @@ export function LoginForm() {
         <form onSubmit={onSubmit} aria-busy={pending} className="grid gap-5">
           {/* Email field */}
           <div className="grid gap-2 animate-in fade-in slide-in-from-bottom-1 duration-500 [animation-delay:100ms] fill-mode-both">
-            <Label htmlFor="email" className="text-sm font-medium">
+            <Label htmlFor="email" className="text-sm font-semibold text-foreground">
               Email
             </Label>
             <Input
@@ -79,13 +79,13 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={pending}
-              className="h-10 border-input/80 hover:border-brand/40 focus-visible:border-brand focus-visible:ring-brand/25 transition-colors"
+              className="h-11 border-input/80 hover:border-brand/40 focus-visible:border-brand focus-visible:ring-brand/25 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all"
             />
           </div>
 
           {/* Password field */}
           <div className="grid gap-2 animate-in fade-in slide-in-from-bottom-1 duration-500 [animation-delay:200ms] fill-mode-both">
-            <Label htmlFor="password" className="text-sm font-medium">
+            <Label htmlFor="password" className="text-sm font-semibold text-foreground">
               Kata sandi
             </Label>
             <Input
@@ -98,7 +98,7 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={pending}
-              className="h-10 border-input/80 hover:border-brand/40 focus-visible:border-brand focus-visible:ring-brand/25 transition-colors"
+              className="h-11 border-input/80 hover:border-brand/40 focus-visible:border-brand focus-visible:ring-brand/25 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all"
             />
           </div>
 
@@ -106,7 +106,7 @@ export function LoginForm() {
             <div
               role="alert"
               aria-live="polite"
-              className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-destructive text-sm animate-in fade-in slide-in-from-top-1 duration-300"
+              className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive text-sm animate-in fade-in slide-in-from-top-1 duration-300"
             >
               {error}
             </div>
@@ -115,7 +115,7 @@ export function LoginForm() {
           <Button
             type="submit"
             size="lg"
-            className="h-11 w-full bg-gradient-to-r from-brand to-accent-2 text-white hover:from-brand/90 hover:to-accent-2/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-glow-gradient-brand active:translate-y-0 transition-all duration-200 disabled:hover:translate-y-0 animate-in fade-in slide-in-from-bottom-1 duration-500 [animation-delay:300ms] fill-mode-both"
+            className="h-12 w-full bg-gradient-to-r from-brand via-brand-accent to-accent-2 text-white hover:from-brand/90 hover:via-brand-accent/90 hover:to-accent-2/90 hover:-translate-y-1 hover:shadow-2xl hover:shadow-glow-gradient-brand active:translate-y-0 transition-all duration-200 disabled:hover:translate-y-0 disabled:hover:shadow-lg disabled:opacity-80 animate-in fade-in slide-in-from-bottom-1 duration-500 [animation-delay:300ms] fill-mode-both"
             disabled={pending}
           >
             <span className="relative flex items-center justify-center gap-2">

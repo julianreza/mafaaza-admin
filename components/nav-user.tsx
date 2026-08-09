@@ -65,37 +65,37 @@ export function NavUser({ user }: NavUserProps) {
             render={
               <SidebarMenuButton
                 size="lg"
-                className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground transition-all duration-200 hover:bg-sidebar-accent/70"
+                className="transition-colors hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent"
               />
             }
           >
-            <div className="flex items-center gap-3 transition-transform hover:scale-105">
-              <Avatar className="size-8 rounded-lg ring-2 ring-brand/40 shadow-glow-gradient-brand hover:ring-accent-2/60 transition-all">
-                <AvatarFallback className="rounded-lg bg-gradient-to-br from-brand to-accent-2 text-white">{initials(user.name)}</AvatarFallback>
+            <div className="flex items-center gap-3">
+              <Avatar className="size-9 rounded-xl ring-1 ring-brand/25 shadow-sm">
+                <AvatarFallback className="rounded-xl bg-gradient-to-br from-brand to-brand-accent text-white">{initials(user.name)}</AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight hidden md:block">
-                <span className="truncate font-semibold text-sidebar-primary-foreground">{user.name}</span>
-                <span className="truncate text-xs text-sidebar-foreground">{user.email}</span>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold text-sidebar-foreground">{user.name}</span>
+                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4 transition-transform group-data-[popup-open]:rotate-180" />
+              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground transition-transform group-data-[popup-open]:rotate-180" />
             </div>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-xl shadow-xl"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-xl border-border/80 bg-popover/95 p-1 shadow-xl backdrop-blur-xl"
             side={isMobile ? "bottom" : "right"}
             align="end"
-            sideOffset={4}
+            sideOffset={8}
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="size-8 rounded-lg">
-                    <AvatarFallback className="rounded-lg bg-gradient-to-br from-brand to-accent-2 text-white">{initials(user.name)}</AvatarFallback>
+              <DropdownMenuLabel className="p-2 font-normal">
+                <div className="flex items-center gap-3 text-left text-sm">
+                  <Avatar className="size-9 rounded-xl ring-1 ring-brand/20">
+                    <AvatarFallback className="rounded-xl bg-gradient-to-br from-brand to-brand-accent text-white">{initials(user.name)}</AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold text-sidebar-primary-foreground">{user.name}</span>
-                    <span className="text-muted-foreground truncate text-xs">{user.role}</span>
+                  <div className="grid flex-1 leading-tight">
+                    <span className="truncate font-semibold text-foreground">{user.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">{user.role}</span>
                   </div>
                 </div>
               </DropdownMenuLabel>
@@ -104,14 +104,14 @@ export function NavUser({ user }: NavUserProps) {
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => setTheme("light")} className="transition-colors hover:bg-accent">
-                <Sun /> Terang
+              <DropdownMenuItem onClick={() => setTheme("light")} className="transition-colors hover:bg-amber-500/10 hover:text-foreground">
+                <Sun className="text-amber-500" /> Terang
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")} className="transition-colors hover:bg-accent">
-                <Moon /> Gelap
+              <DropdownMenuItem onClick={() => setTheme("dark")} className="transition-colors hover:bg-brand/10 hover:text-foreground">
+                <Moon className="text-brand" /> Gelap
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")} className="transition-colors hover:bg-accent">
-                <Monitor /> Sistem
+              <DropdownMenuItem onClick={() => setTheme("system")} className="transition-colors hover:bg-blue-500/10 hover:text-foreground">
+                <Monitor className="text-blue-500" /> Sistem
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
@@ -122,7 +122,7 @@ export function NavUser({ user }: NavUserProps) {
                 onClick={handleSignOut}
                 disabled={signingOut}
                 variant="destructive"
-                className="transition-colors hover:bg-destructive/10 hover:text-destructive"
+                className="transition-colors hover:bg-destructive/10"
               >
                 <LogOut /> {signingOut ? "Keluar..." : "Keluar"}
               </DropdownMenuItem>
