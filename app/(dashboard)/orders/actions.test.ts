@@ -1,19 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
 // --- Mocks (vi.hoisted so the fns exist before vi.mock factories run) --------
-const { profile, createOrder, updateOrderStatus, deleteOrder, revalidatePath } =
+const { profile, createOrder, updateOrderStatus, deleteOrder, getOrder, revalidatePath } =
   vi.hoisted(() => ({
     profile: vi.fn(),
     createOrder: vi.fn(),
     updateOrderStatus: vi.fn(),
     deleteOrder: vi.fn(),
+    getOrder: vi.fn(),
     revalidatePath: vi.fn(),
   }))
 
 vi.mock("@/lib/api", () => ({
   getApiClientFromCookies: () => ({
     mafaaza_api: { profile },
-    transactions: { createOrder, updateOrderStatus, deleteOrder },
+    transactions: { createOrder, updateOrderStatus, deleteOrder, getOrder },
   }),
 }))
 
@@ -161,10 +162,34 @@ describe("updateOrderStatusAction", () => {
   it("requires paidAmount when transitioning to paid", async () => {
     const res = await updateOrderStatusAction("o1", fd({ status: "paid" }))
     expect(res.ok).toBe(false)
+    expect(getOrder).not.toHaveBeenCalled()
     expect(updateOrderStatus).not.toHaveBeenCalled()
   })
 
-  it("updates status with paidAmount and revalidates", async () => {
+  it("rejects paid when paidAmount is 0 but the order total is positive", async () => {
+    getOrder.mockResolvedValueOnce({ order: { totalAmount: 20000 } })
+    const res = await updateOrderStatusAction("o1", fd({ status: "paid", paidAmount: "0" }))
+    expect(res.ok).toBe(false)
+    expect(updateOrderStatus).not.toHaveBeenCalled()
+  })
+
+  it("rejects paid when paidAmount does not cover the total", async () => {
+    getOrder.mockResolvedValueOnce({ order: { totalAmount: 20000 } })
+    const res = await updateOrderStatusAction("o1", fd({ status: "paid", paidAmount: "15000" }))
+    expect(res.ok).toBe(false)
+    expect(updateOrderStatus).not.toHaveBeenCalled()
+  })
+
+  it("accepts paid with paidAmount 0 for a fully-discounted (total 0) order", async () => {
+    getOrder.mockResolvedValueOnce({ order: { totalAmount: 0 } })
+    updateOrderStatus.mockResolvedValueOnce({ order: { id: "o1" } })
+    const res = await updateOrderStatusAction("o1", fd({ status: "paid", paidAmount: "0" }))
+    expect(res).toEqual({ ok: true })
+    expect(updateOrderStatus).toHaveBeenCalledWith("o1", { status: "paid", paidAmount: 0 })
+  })
+
+  it("updates status with paidAmount covering the total and revalidates", async () => {
+    getOrder.mockResolvedValueOnce({ order: { totalAmount: 20000 } })
     updateOrderStatus.mockResolvedValueOnce({ order: { id: "o1" } })
     const res = await updateOrderStatusAction("o1", fd({ status: "paid", paidAmount: "20000" }))
     expect(res).toEqual({ ok: true })
@@ -175,10 +200,11 @@ describe("updateOrderStatusAction", () => {
     expect(revalidatePath).toHaveBeenCalledWith("/orders")
   })
 
-  it("updates a non-paid status without paidAmount", async () => {
+  it("updates a non-paid status without paidAmount (no total lookup)", async () => {
     updateOrderStatus.mockResolvedValueOnce({ order: { id: "o1" } })
     const res = await updateOrderStatusAction("o1", fd({ status: "confirmed" }))
     expect(res).toEqual({ ok: true })
+    expect(getOrder).not.toHaveBeenCalled()
     expect(updateOrderStatus).toHaveBeenCalledWith("o1", {
       status: "confirmed",
       paidAmount: undefined,

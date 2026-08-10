@@ -174,8 +174,28 @@ export async function updateOrderStatusAction(
     paidAmount = parsedPaid
   }
 
-  if (status === "paid" && paidAmount === undefined) {
-    return { ok: false, error: "Jumlah dibayar wajib diisi saat menandai lunas." }
+  if (status === "paid") {
+    if (paidAmount === undefined) {
+      return { ok: false, error: "Jumlah dibayar wajib diisi saat menandai lunas." }
+    }
+    // `paidAmount` alone can't be trusted: a truthy "0" parses to 0 and would
+    // otherwise slip past an `=== undefined` guard, flagging an order paid with
+    // zero money recorded. Fetch the authoritative total and require the payment
+    // to cover it. A fully-discounted order (total 0) is satisfied by 0.
+    let totalAmount: number
+    try {
+      const { order } = await auth.api.transactions.getOrder(id)
+      totalAmount = order.totalAmount
+    } catch (err) {
+      console.error("[updateOrderStatusAction] getOrder failed:", err)
+      return { ok: false, error: GENERIC_ERROR }
+    }
+    if (paidAmount < totalAmount) {
+      return {
+        ok: false,
+        error: "Jumlah dibayar harus menutupi total pesanan untuk menandai lunas.",
+      }
+    }
   }
 
   try {

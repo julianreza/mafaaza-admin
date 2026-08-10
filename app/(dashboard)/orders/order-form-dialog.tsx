@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner"
 
 import type { masters } from "@/lib/api/client"
+import { formatPrice } from "@/lib/format"
 import { createOrderAction } from "./actions"
 
 interface OrderFormDialogProps {
@@ -42,10 +43,11 @@ interface LineItem {
   unitPrice: string
 }
 
-let lineKeySeq = 0
+// Each line gets a stable, collision-free key. A module-level counter would
+// reset on HMR (duplicate keys) and be shared across instances, so use a UUID
+// scoped to the line itself (Code Review Sage finding #1).
 function newLine(): LineItem {
-  lineKeySeq += 1
-  return { key: `line-${lineKeySeq}`, productId: "", quantity: "1", unitPrice: "" }
+  return { key: crypto.randomUUID(), productId: "", quantity: "1", unitPrice: "" }
 }
 
 export function OrderFormDialog({
@@ -65,13 +67,6 @@ export function OrderFormDialog({
     for (const p of products) map.set(p.id, p)
     return map
   }, [products])
-
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price)
 
   const updateLine = (key: string, patch: Partial<LineItem>) => {
     setItems((prev) => prev.map((it) => (it.key === key ? { ...it, ...patch } : it)))

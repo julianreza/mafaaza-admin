@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner"
 
 import type { transactions } from "@/lib/api/client"
+import { formatPrice } from "@/lib/format"
 import { updateOrderStatusAction } from "./actions"
 
 type OrderRow = transactions.ListOrdersResponse["orders"][number]
@@ -57,13 +58,6 @@ export function OrderStatusDialog({
   const statusLabel =
     STATUS_OPTIONS.find((o) => o.value === status)?.label ?? "Pilih status..."
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price)
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -71,6 +65,10 @@ export function OrderStatusDialog({
       const paid = parseFloat(paidAmount)
       if (paidAmount === "" || isNaN(paid) || paid < 0) {
         toast.error("Jumlah dibayar wajib diisi (>= 0) saat menandai lunas.")
+        return
+      }
+      if (paid < order.totalAmount) {
+        toast.error("Jumlah dibayar harus menutupi total pesanan.")
         return
       }
     }

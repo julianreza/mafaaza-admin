@@ -30,6 +30,7 @@ import {
 import { EllipsisIcon, PlusIcon, SearchIcon, FilterIcon } from "lucide-react"
 
 import type { masters, transactions } from "@/lib/api/client"
+import { formatPrice, formatDate } from "@/lib/format"
 import { OrderFormDialog } from "./order-form-dialog"
 import { OrderStatusDialog } from "./order-status-dialog"
 import { DeleteOrderDialog } from "./delete-order-dialog"
@@ -83,8 +84,7 @@ export function OrdersView({
   const [deleteOrder, setDeleteOrder] = useState<OrderRow | null>(null)
   const [searchInput, setSearchInput] = useState(search)
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchInput(value)
+  const pushSearch = useCallback((value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     if (value) {
       params.set("search", value)
@@ -95,15 +95,17 @@ export function OrdersView({
     router.push(`/orders?${params.toString()}`)
   }, [router, searchParams])
 
-  // Debounced search input sync
+  // Debounced search sync. The comparison is anchored on the server-provided
+  // `search` prop (the committed value), NOT the live searchParams object —
+  // that keeps the effect deterministic and avoids the re-navigation footgun
+  // where a searchParams identity change (e.g. from pagination) could retrigger
+  // a push. Once navigation lands, `search` re-equals `searchInput` and the
+  // guard short-circuits, so there is no loop.
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (searchInput !== (searchParams.get("search") ?? "")) {
-        handleSearchChange(searchInput)
-      }
-    }, 300)
+    if (searchInput === search) return
+    const timeout = setTimeout(() => pushSearch(searchInput), 300)
     return () => clearTimeout(timeout)
-  }, [searchInput, searchParams, handleSearchChange])
+  }, [searchInput, search, pushSearch])
 
   const handleStatusFilter = (value: string) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -123,24 +125,6 @@ export function OrdersView({
     setStatusOrder(null)
     setDeleteOrder(null)
     router.refresh()
-  }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price)
-  }
-
-  const formatDate = (iso: string) => {
-    const date = new Date(iso)
-    if (isNaN(date.getTime())) return "—"
-    return new Intl.DateTimeFormat("id-ID", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }).format(date)
   }
 
   const activeStatusLabel =
@@ -324,6 +308,7 @@ export function OrdersView({
 
       {statusOrder && (
         <OrderStatusDialog
+          key={statusOrder.id}
           open={!!statusOrder}
           onOpenChange={(open) => {
             if (!open) setStatusOrder(null)
