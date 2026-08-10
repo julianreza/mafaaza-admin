@@ -13,7 +13,7 @@ const { profile, createOrder, updateOrderStatus, deleteOrder, revalidatePath } =
 vi.mock("@/lib/api", () => ({
   getApiClientFromCookies: () => ({
     mafaaza_api: { profile },
-    masters: { createOrder, updateOrderStatus, deleteOrder },
+    transactions: { createOrder, updateOrderStatus, deleteOrder },
   }),
 }))
 

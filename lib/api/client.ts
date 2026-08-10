@@ -35,6 +35,7 @@ export default class Client {
     public readonly auth: auth.ServiceClient
     public readonly mafaaza_api: mafaaza_api.ServiceClient
     public readonly masters: masters.ServiceClient
+    public readonly transactions: transactions.ServiceClient
     private readonly options: ClientOptions
     private readonly target: string
 
@@ -52,6 +53,7 @@ export default class Client {
         this.auth = new auth.ServiceClient(base)
         this.mafaaza_api = new mafaaza_api.ServiceClient(base)
         this.masters = new masters.ServiceClient(base)
+        this.transactions = new transactions.ServiceClient(base)
     }
 
     /**
@@ -130,6 +132,9 @@ export namespace mafaaza_api {
         message: string
     }
 
+    /**
+     * The public shape returned by `GET /profile`.
+     */
     export interface ProfileResponse {
         userID: string
         email: string
@@ -171,6 +176,136 @@ export namespace mafaaza_api {
 }
 
 export namespace masters {
+    export interface CreateProductRequest {
+        categoryId?: string
+        name: string
+        sku?: string
+        price: number
+        unit?: string
+        description?: string
+    }
+
+    export interface CreateProductResponse {
+        product: Product
+    }
+
+    export interface GetProductResponse {
+        product: ProductWithCategory
+    }
+
+    export interface ListProductsRequest {
+        page?: number
+        limit?: number
+        search?: string
+        categoryId?: string
+        isActive?: boolean
+    }
+
+    export interface ListProductsResponse {
+        products: ProductWithCategory[]
+        total: number
+        page: number
+        limit: number
+    }
+
+    export interface Product {
+        id: string
+        categoryId: string | null
+        name: string
+        sku: string | null
+        price: number
+        unit: string
+        description: string | null
+        isActive: boolean
+        createdAt: string
+        updatedAt: string
+    }
+
+    export interface ProductWithCategory {
+        categoryName: string | null
+        id: string
+        categoryId: string | null
+        name: string
+        sku: string | null
+        price: number
+        unit: string
+        description: string | null
+        isActive: boolean
+        createdAt: string
+        updatedAt: string
+    }
+
+    export interface UpdateProductResponse {
+        product: Product
+    }
+
+    export class ServiceClient {
+        private baseClient: BaseClient
+
+        constructor(baseClient: BaseClient) {
+            this.baseClient = baseClient
+            this.createProduct = this.createProduct.bind(this)
+            this.deleteProduct = this.deleteProduct.bind(this)
+            this.getProduct = this.getProduct.bind(this)
+            this.listProducts = this.listProducts.bind(this)
+            this.updateProduct = this.updateProduct.bind(this)
+        }
+
+        public async createProduct(params: CreateProductRequest): Promise<CreateProductResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/products`, JSON.stringify(params))
+            return await resp.json() as CreateProductResponse
+        }
+
+        public async deleteProduct(id: string, params: {
+    force?: boolean
+}): Promise<void> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                force: params.force === undefined ? undefined : String(params.force),
+            })
+
+            await this.baseClient.callTypedAPI("DELETE", `/products/${encodeURIComponent(id)}`, undefined, {query})
+        }
+
+        public async getProduct(id: string): Promise<GetProductResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/products/${encodeURIComponent(id)}`)
+            return await resp.json() as GetProductResponse
+        }
+
+        public async listProducts(params: ListProductsRequest): Promise<ListProductsResponse> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                categoryId: params.categoryId,
+                isActive:   params.isActive === undefined ? undefined : String(params.isActive),
+                limit:      params.limit === undefined ? undefined : String(params.limit),
+                page:       params.page === undefined ? undefined : String(params.page),
+                search:     params.search,
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/products`, undefined, {query})
+            return await resp.json() as ListProductsResponse
+        }
+
+        public async updateProduct(id: string, params: {
+    categoryId?: string | null
+    name?: string
+    sku?: string | null
+    price?: number
+    unit?: string
+    description?: string | null
+    isActive?: boolean
+}): Promise<UpdateProductResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PATCH", `/products/${encodeURIComponent(id)}`, JSON.stringify(params))
+            return await resp.json() as UpdateProductResponse
+        }
+    }
+}
+
+export namespace transactions {
     export interface CreateOrderItemInput {
         productId: string
         quantity: number
@@ -191,25 +326,8 @@ export namespace masters {
         order: Order
     }
 
-    export interface CreateProductRequest {
-        categoryId?: string
-        name: string
-        sku?: string
-        price: number
-        unit?: string
-        description?: string
-    }
-
-    export interface CreateProductResponse {
-        product: Product
-    }
-
     export interface GetOrderResponse {
         order: Order
-    }
-
-    export interface GetProductResponse {
-        product: ProductWithCategory
     }
 
     export interface ListOrdersRequest {
@@ -256,21 +374,6 @@ export namespace masters {
         limit: number
     }
 
-    export interface ListProductsRequest {
-        page?: number
-        limit?: number
-        search?: string
-        categoryId?: string
-        isActive?: boolean
-    }
-
-    export interface ListProductsResponse {
-        products: ProductWithCategory[]
-        total: number
-        page: number
-        limit: number
-    }
-
     export interface Order {
         id: string
         invoiceNumber: string | null
@@ -305,39 +408,8 @@ export namespace masters {
 
     export type OrderStatus = "draft" | "confirmed" | "paid" | "cancelled"
 
-    export interface Product {
-        id: string
-        categoryId: string | null
-        name: string
-        sku: string | null
-        price: number
-        unit: string
-        description: string | null
-        isActive: boolean
-        createdAt: string
-        updatedAt: string
-    }
-
-    export interface ProductWithCategory {
-        categoryName: string | null
-        id: string
-        categoryId: string | null
-        name: string
-        sku: string | null
-        price: number
-        unit: string
-        description: string | null
-        isActive: boolean
-        createdAt: string
-        updatedAt: string
-    }
-
     export interface UpdateOrderStatusResponse {
         order: Order
-    }
-
-    export interface UpdateProductResponse {
-        product: Product
     }
 
     export class ServiceClient {
@@ -346,15 +418,10 @@ export namespace masters {
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
             this.createOrder = this.createOrder.bind(this)
-            this.createProduct = this.createProduct.bind(this)
             this.deleteOrder = this.deleteOrder.bind(this)
-            this.deleteProduct = this.deleteProduct.bind(this)
             this.getOrder = this.getOrder.bind(this)
-            this.getProduct = this.getProduct.bind(this)
             this.listOrders = this.listOrders.bind(this)
-            this.listProducts = this.listProducts.bind(this)
             this.updateOrderStatus = this.updateOrderStatus.bind(this)
-            this.updateProduct = this.updateProduct.bind(this)
         }
 
         public async createOrder(params: CreateOrderRequest): Promise<CreateOrderResponse> {
@@ -363,37 +430,14 @@ export namespace masters {
             return await resp.json() as CreateOrderResponse
         }
 
-        public async createProduct(params: CreateProductRequest): Promise<CreateProductResponse> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/products`, JSON.stringify(params))
-            return await resp.json() as CreateProductResponse
-        }
-
         public async deleteOrder(id: string): Promise<void> {
             await this.baseClient.callTypedAPI("DELETE", `/orders/${encodeURIComponent(id)}`)
-        }
-
-        public async deleteProduct(id: string, params: {
-    force?: boolean
-}): Promise<void> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                force: params.force === undefined ? undefined : String(params.force),
-            })
-
-            await this.baseClient.callTypedAPI("DELETE", `/products/${encodeURIComponent(id)}`, undefined, {query})
         }
 
         public async getOrder(id: string): Promise<GetOrderResponse> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/orders/${encodeURIComponent(id)}`)
             return await resp.json() as GetOrderResponse
-        }
-
-        public async getProduct(id: string): Promise<GetProductResponse> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/products/${encodeURIComponent(id)}`)
-            return await resp.json() as GetProductResponse
         }
 
         public async listOrders(params: ListOrdersRequest): Promise<ListOrdersResponse> {
@@ -413,21 +457,6 @@ export namespace masters {
             return await resp.json() as ListOrdersResponse
         }
 
-        public async listProducts(params: ListProductsRequest): Promise<ListProductsResponse> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                categoryId: params.categoryId,
-                isActive:   params.isActive === undefined ? undefined : String(params.isActive),
-                limit:      params.limit === undefined ? undefined : String(params.limit),
-                page:       params.page === undefined ? undefined : String(params.page),
-                search:     params.search,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/products`, undefined, {query})
-            return await resp.json() as ListProductsResponse
-        }
-
         public async updateOrderStatus(id: string, params: {
     status: OrderStatus
     /**
@@ -438,20 +467,6 @@ export namespace masters {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PATCH", `/orders/${encodeURIComponent(id)}/status`, JSON.stringify(params))
             return await resp.json() as UpdateOrderStatusResponse
-        }
-
-        public async updateProduct(id: string, params: {
-    categoryId?: string | null
-    name?: string
-    sku?: string | null
-    price?: number
-    unit?: string
-    description?: string | null
-    isActive?: boolean
-}): Promise<UpdateProductResponse> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PATCH", `/products/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as UpdateProductResponse
         }
     }
 }

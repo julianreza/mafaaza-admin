@@ -13,10 +13,10 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 
-import type { masters } from "@/lib/api/client"
+import type { transactions } from "@/lib/api/client"
 import { deleteOrderAction } from "./actions"
 
-type OrderRow = masters.ListOrdersResponse["orders"][number]
+type OrderRow = transactions.ListOrdersResponse["orders"][number]
 
 interface DeleteOrderDialogProps {
   open: boolean

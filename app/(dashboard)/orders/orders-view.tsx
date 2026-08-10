@@ -29,14 +29,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { EllipsisIcon, PlusIcon, SearchIcon, FilterIcon } from "lucide-react"
 
-import type { masters } from "@/lib/api/client"
+import type { masters, transactions } from "@/lib/api/client"
 import { OrderFormDialog } from "./order-form-dialog"
 import { OrderStatusDialog } from "./order-status-dialog"
 import { DeleteOrderDialog } from "./delete-order-dialog"
 
 // The list endpoint returns an inline row shape (no `items`), distinct from the
-// full `masters.Order`. Alias it so the table and dialogs share one type.
-type OrderRow = masters.ListOrdersResponse["orders"][number]
+// full `transactions.Order`. Alias it so the table and dialogs share one type.
+type OrderRow = transactions.ListOrdersResponse["orders"][number]
 
 interface OrdersViewProps {
   orders: OrderRow[]
@@ -49,7 +49,7 @@ interface OrdersViewProps {
 }
 
 const STATUS_META: Record<
-  masters.OrderStatus,
+  transactions.OrderStatus,
   { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
 > = {
   draft: { label: "Draf", variant: "secondary" },

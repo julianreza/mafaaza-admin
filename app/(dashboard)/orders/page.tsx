@@ -2,7 +2,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { getApiClientFromCookies } from "@/lib/api"
-import type { masters } from "@/lib/api/client"
+import type { masters, transactions } from "@/lib/api/client"
 import { OrdersView } from "./orders-view"
 
 export default async function OrdersPage({
@@ -25,23 +25,23 @@ export default async function OrdersPage({
   const limit = 20
 
   // Only forward a valid status filter to the backend; anything else is ignored.
-  const validStatuses: readonly masters.OrderStatus[] = [
+  const validStatuses: readonly transactions.OrderStatus[] = [
     "draft",
     "confirmed",
     "paid",
     "cancelled",
   ]
   const statusFilter =
-    status && validStatuses.includes(status as masters.OrderStatus)
-      ? (status as masters.OrderStatus)
+    status && validStatuses.includes(status as transactions.OrderStatus)
+      ? (status as transactions.OrderStatus)
       : undefined
 
   // Guard the fetch: the session is already validated above, but the backend
   // call can still fail (network/500). Degrade to an empty list rather than
   // throwing an unhandled error that blanks the whole route.
-  let result: Awaited<ReturnType<typeof api.masters.listOrders>>
+  let result: Awaited<ReturnType<typeof api.transactions.listOrders>>
   try {
-    result = await api.masters.listOrders({
+    result = await api.transactions.listOrders({
       page: pageNum,
       limit,
       invoiceSearch: search || undefined,

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 
 import { getApiClientFromCookies, type Client } from "@/lib/api"
-import type { masters } from "@/lib/api/client"
+import type { transactions } from "@/lib/api/client"
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
@@ -20,8 +20,8 @@ const AUTHZ_ERROR = "Anda tidak memiliki izin untuk melakukan tindakan ini."
 // plugin (see mafaaza-api services/auth/schema.ts), so mutations are admin-only.
 const ALLOWED_MUTATE_ROLES: readonly string[] = ["admin"]
 
-// Valid order statuses, mirrored from the backend `masters.OrderStatus` union.
-const ORDER_STATUSES: readonly masters.OrderStatus[] = [
+// Valid order statuses, mirrored from the backend `transactions.OrderStatus` union.
+const ORDER_STATUSES: readonly transactions.OrderStatus[] = [
   "draft",
   "confirmed",
   "paid",
@@ -94,7 +94,7 @@ export async function createOrderAction(
     return { ok: false, error: "Pesanan harus memiliki minimal satu item." }
   }
 
-  const items: masters.CreateOrderItemInput[] = []
+  const items: transactions.CreateOrderItemInput[] = []
   for (const raw of parsed) {
     if (typeof raw !== "object" || raw === null) {
       return { ok: false, error: "Data item tidak valid." }
@@ -108,7 +108,7 @@ export async function createOrderAction(
     if (!Number.isFinite(quantity) || quantity <= 0) {
       return { ok: false, error: "Jumlah item harus lebih dari 0." }
     }
-    const mapped: masters.CreateOrderItemInput = { productId, quantity }
+    const mapped: transactions.CreateOrderItemInput = { productId, quantity }
     if (item.unitPrice !== undefined && item.unitPrice !== null && item.unitPrice !== "") {
       const unitPrice = Number(item.unitPrice)
       if (!Number.isFinite(unitPrice) || unitPrice < 0) {
@@ -129,7 +129,7 @@ export async function createOrderAction(
   }
 
   try {
-    await auth.api.masters.createOrder({
+    await auth.api.transactions.createOrder({
       items,
       discountAmount,
       notes: notes || undefined,
@@ -158,7 +158,7 @@ export async function updateOrderStatusAction(
   const status = formData.get("status") as string | null
   const paidAmountStr = formData.get("paidAmount") as string | undefined
 
-  if (!status || !ORDER_STATUSES.includes(status as masters.OrderStatus)) {
+  if (!status || !ORDER_STATUSES.includes(status as transactions.OrderStatus)) {
     return { ok: false, error: "Status pesanan tidak valid." }
   }
 
@@ -179,8 +179,8 @@ export async function updateOrderStatusAction(
   }
 
   try {
-    await auth.api.masters.updateOrderStatus(id, {
-      status: status as masters.OrderStatus,
+    await auth.api.transactions.updateOrderStatus(id, {
+      status: status as transactions.OrderStatus,
       paidAmount,
     })
 
@@ -201,7 +201,7 @@ export async function deleteOrderAction(id: string): Promise<ActionResult> {
   if ("error" in auth) return { ok: false, error: auth.error }
 
   try {
-    await auth.api.masters.deleteOrder(id)
+    await auth.api.transactions.deleteOrder(id)
 
     revalidatePath("/orders")
     return { ok: true }

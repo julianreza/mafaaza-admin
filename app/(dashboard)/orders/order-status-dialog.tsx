@@ -22,10 +22,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 
-import type { masters } from "@/lib/api/client"
+import type { transactions } from "@/lib/api/client"
 import { updateOrderStatusAction } from "./actions"
 
-type OrderRow = masters.ListOrdersResponse["orders"][number]
+type OrderRow = transactions.ListOrdersResponse["orders"][number]
 
 interface OrderStatusDialogProps {
   open: boolean
@@ -34,7 +34,7 @@ interface OrderStatusDialogProps {
   onSuccess: () => void
 }
 
-const STATUS_OPTIONS: { value: masters.OrderStatus; label: string }[] = [
+const STATUS_OPTIONS: { value: transactions.OrderStatus; label: string }[] = [
   { value: "draft", label: "Draf" },
   { value: "confirmed", label: "Dikonfirmasi" },
   { value: "paid", label: "Lunas" },
@@ -49,7 +49,7 @@ export function OrderStatusDialog({
 }: OrderStatusDialogProps) {
   const [pending, startTransition] = useTransition()
 
-  const [status, setStatus] = useState<masters.OrderStatus>(order.status)
+  const [status, setStatus] = useState<transactions.OrderStatus>(order.status)
   const [paidAmount, setPaidAmount] = useState(
     order.paidAmount ? String(order.paidAmount) : ""
   )
