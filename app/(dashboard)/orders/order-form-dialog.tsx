@@ -40,14 +40,10 @@ interface LineItem {
   key: string
   productId: string
   quantity: string
-  unitPrice: string
 }
 
-// Each line gets a stable, collision-free key. A module-level counter would
-// reset on HMR (duplicate keys) and be shared across instances, so use a UUID
-// scoped to the line itself (Code Review Sage finding #1).
 function newLine(): LineItem {
-  return { key: crypto.randomUUID(), productId: "", quantity: "1", unitPrice: "" }
+  return { key: crypto.randomUUID(), productId: "", quantity: "1" }
 }
 
 export function OrderFormDialog({
@@ -77,12 +73,12 @@ export function OrderFormDialog({
   const removeLine = (key: string) =>
     setItems((prev) => (prev.length > 1 ? prev.filter((it) => it.key !== key) : prev))
 
-  // Live subtotal estimate: unit price falls back to the product's list price.
+  // Live subtotal calculation using the selected product's default price.
   const estimatedSubtotal = useMemo(() => {
     return items.reduce((sum, it) => {
       const product = productById.get(it.productId)
       const qty = parseFloat(it.quantity)
-      const price = it.unitPrice !== "" ? parseFloat(it.unitPrice) : product?.price ?? 0
+      const price = product?.price ?? 0
       if (!Number.isFinite(qty) || !Number.isFinite(price)) return sum
       return sum + qty * price
     }, 0)
@@ -97,7 +93,7 @@ export function OrderFormDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Client-side validation (the server action re-validates authoritatively).
+    // Client-side validation
     const cleaned = items.filter((it) => it.productId)
     if (cleaned.length === 0) {
       toast.error("Pesanan harus memiliki minimal satu item dengan produk.")
@@ -108,13 +104,6 @@ export function OrderFormDialog({
       if (!Number.isFinite(qty) || qty <= 0) {
         toast.error("Jumlah setiap item harus lebih dari 0.")
         return
-      }
-      if (it.unitPrice !== "") {
-        const price = parseFloat(it.unitPrice)
-        if (!Number.isFinite(price) || price < 0) {
-          toast.error("Harga satuan harus berupa angka >= 0.")
-          return
-        }
       }
     }
     if (discount !== "") {
@@ -128,7 +117,6 @@ export function OrderFormDialog({
     const payload = cleaned.map((it) => ({
       productId: it.productId,
       quantity: parseFloat(it.quantity),
-      ...(it.unitPrice !== "" ? { unitPrice: parseFloat(it.unitPrice) } : {}),
     }))
 
     startTransition(async () => {
@@ -165,7 +153,7 @@ export function OrderFormDialog({
                   key={line.key}
                   className="grid grid-cols-[1fr_auto] gap-2 rounded-lg border border-border/70 p-3"
                 >
-                  <div className="grid gap-2">
+                  <div className="grid gap-2.5">
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         render={
@@ -197,8 +185,9 @@ export function OrderFormDialog({
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="grid gap-1">
+
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 grid gap-1">
                         <Label className="text-xs text-muted-foreground">Jumlah</Label>
                         <Input
                           type="number"
@@ -209,19 +198,11 @@ export function OrderFormDialog({
                           disabled={pending}
                         />
                       </div>
-                      <div className="grid gap-1">
-                        <Label className="text-xs text-muted-foreground">
-                          Harga (opsional)
-                        </Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder={selected ? String(selected.price) : "default"}
-                          value={line.unitPrice}
-                          onChange={(e) => updateLine(line.key, { unitPrice: e.target.value })}
-                          disabled={pending}
-                        />
+                      <div className="flex flex-col items-end justify-center pt-4 text-xs">
+                        <span className="text-muted-foreground font-medium">Harga Satuan</span>
+                        <span className="font-semibold text-foreground text-sm">
+                          {selected ? formatPrice(selected.price) : "-"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -239,6 +220,7 @@ export function OrderFormDialog({
                 </div>
               )
             })}
+
             <Button
               type="button"
               variant="outline"

@@ -33,6 +33,8 @@ const BROWSER = typeof globalThis === "object" && ("window" in globalThis);
  */
 export default class Client {
     public readonly auth: auth.ServiceClient
+    public readonly dashboard: dashboard.ServiceClient
+    public readonly expenses: expenses.ServiceClient
     public readonly mafaaza_api: mafaaza_api.ServiceClient
     public readonly masters: masters.ServiceClient
     public readonly transactions: transactions.ServiceClient
@@ -51,6 +53,8 @@ export default class Client {
         this.options = options ?? {}
         const base = new BaseClient(this.target, this.options)
         this.auth = new auth.ServiceClient(base)
+        this.dashboard = new dashboard.ServiceClient(base)
+        this.expenses = new expenses.ServiceClient(base)
         this.mafaaza_api = new mafaaza_api.ServiceClient(base)
         this.masters = new masters.ServiceClient(base)
         this.transactions = new transactions.ServiceClient(base)
@@ -91,6 +95,128 @@ export interface ClientOptions {
     auth?: auth.AuthParams | AuthDataGenerator
 }
 
+export namespace dashboard {
+    export type ChartPeriod = "today" | "week" | "month"
+
+    export interface SummaryResponse {
+        todayRevenue: number
+        todayRevenueGrowthPercent: number
+        todayOrdersCount: number
+        todayOrdersGrowthPercent: number
+        activeProductsCount: number
+        lowStockCount: number
+    }
+
+    export interface SalesChartPoint {
+        label: string
+        revenue: number
+        orders: number
+    }
+
+    export interface SalesChartResponse {
+        period: ChartPeriod
+        points: SalesChartPoint[]
+    }
+
+    export interface TopProductItem {
+        id: string
+        name: string
+        quantitySold: number
+        totalRevenue: number
+    }
+
+    export interface TopProductsResponse {
+        products: TopProductItem[]
+    }
+
+    export interface LowStockItem {
+        id: string
+        name: string
+        sku: string | null
+        stock: number
+        minStock: number
+        unit?: string | null
+    }
+
+    export interface LowStockResponse {
+        products: LowStockItem[]
+    }
+
+    export interface RecentOrderItem {
+        id: string
+        invoiceNumber: string | null
+        totalAmount: number
+        status: string
+        createdAt: string
+    }
+
+    export interface RecentOrdersResponse {
+        orders: RecentOrderItem[]
+    }
+
+    export interface TargetResponse {
+        targetAmount: number
+        currentAmount: number
+        percentage: number
+    }
+
+    export class ServiceClient {
+        private readonly baseClient: BaseClient
+
+        constructor(baseClient: BaseClient) {
+            this.baseClient = baseClient
+            this.getSummary = this.getSummary.bind(this)
+            this.getSalesChart = this.getSalesChart.bind(this)
+            this.getTopProducts = this.getTopProducts.bind(this)
+            this.getLowStock = this.getLowStock.bind(this)
+            this.getRecentOrders = this.getRecentOrders.bind(this)
+            this.getTarget = this.getTarget.bind(this)
+        }
+
+        public async getSummary(): Promise<SummaryResponse> {
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/summary`)
+            return await resp.json() as SummaryResponse
+        }
+
+        public async getSalesChart(params: { period?: ChartPeriod }): Promise<SalesChartResponse> {
+            const query = makeRecord<string, string | string[]>({
+                period: params.period === undefined ? undefined : String(params.period),
+            })
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/sales-chart`, undefined, {query})
+            return await resp.json() as SalesChartResponse
+        }
+
+        public async getTopProducts(params: { limit?: number }): Promise<TopProductsResponse> {
+            const query = makeRecord<string, string | string[]>({
+                limit: params.limit === undefined ? undefined : String(params.limit),
+            })
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/top-products`, undefined, {query})
+            return await resp.json() as TopProductsResponse
+        }
+
+        public async getLowStock(params: { limit?: number }): Promise<LowStockResponse> {
+            const query = makeRecord<string, string | string[]>({
+                limit: params.limit === undefined ? undefined : String(params.limit),
+            })
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/low-stock`, undefined, {query})
+            return await resp.json() as LowStockResponse
+        }
+
+        public async getRecentOrders(params: { limit?: number }): Promise<RecentOrdersResponse> {
+            const query = makeRecord<string, string | string[]>({
+                limit: params.limit === undefined ? undefined : String(params.limit),
+            })
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/recent-orders`, undefined, {query})
+            return await resp.json() as RecentOrdersResponse
+        }
+
+        public async getTarget(): Promise<TargetResponse> {
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/target`)
+            return await resp.json() as TargetResponse
+        }
+    }
+}
+
 export namespace auth {
     export interface AuthParams {
         /**
@@ -104,12 +230,51 @@ export namespace auth {
         cookie?: string
     }
 
+    export interface BootstrapAdminResponse {
+        message: string
+        user: {
+            id: string
+            name: string
+            email: string
+            role: string
+        }
+    }
+
+    export interface ListUsersResponse {
+        users: {
+            id: string
+            name: string
+            email: string
+            role: string
+            banned: boolean | null
+            createdAt: string
+        }[]
+    }
+
+    export interface SetUserRoleRequest {
+        userId: string
+        role: string
+    }
+
+    export interface UserRoleResponse {
+        success: boolean
+        user: {
+            id: string
+            name: string
+            email: string
+            role: string
+        }
+    }
+
     export class ServiceClient {
         private baseClient: BaseClient
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
             this.authRoutes = this.authRoutes.bind(this)
+            this.bootstrapFirstAdmin = this.bootstrapFirstAdmin.bind(this)
+            this.listUsers = this.listUsers.bind(this)
+            this.setUserRole = this.setUserRole.bind(this)
         }
 
         /**
@@ -124,6 +289,147 @@ export namespace auth {
         public async authRoutes(method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE" | "HEAD" | "OPTIONS" | "TRACE", path: string[], body?: RequestInit["body"], options?: CallParameters): Promise<globalThis.Response> {
             return this.baseClient.callAPI(method, `/auth/${path.map(encodeURIComponent).join("/")}`, body, options)
         }
+
+        /**
+         * Promotes the logged-in user to admin ONLY IF no admin user currently exists.
+         * Used for initial environment setup.
+         */
+        public async bootstrapFirstAdmin(): Promise<BootstrapAdminResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/auth/admin/bootstrap`)
+            return await resp.json() as BootstrapAdminResponse
+        }
+
+        /**
+         * Lists all registered users and their roles. Requires admin role.
+         */
+        public async listUsers(): Promise<ListUsersResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/auth/admin/users`)
+            return await resp.json() as ListUsersResponse
+        }
+
+        /**
+         * Updates a user's role. Requires admin role.
+         */
+        public async setUserRole(params: SetUserRoleRequest): Promise<UserRoleResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/auth/admin/set-role`, JSON.stringify(params))
+            return await resp.json() as UserRoleResponse
+        }
+    }
+}
+
+export namespace expenses {
+    export interface CreateExpenseRequest {
+        category?: ExpenseCategory
+        description: string
+        amount: number
+        occurredAt?: string
+        referenceNumber?: string
+    }
+
+    export interface CreateExpenseResponse {
+        expense: Expense
+    }
+
+    export interface DeleteExpenseResponse {
+        success: boolean
+    }
+
+    export interface Expense {
+        id: string
+        referenceNumber: string | null
+        category: ExpenseCategory
+        description: string
+        amount: number
+        recordedBy: string
+        occurredAt: string
+        createdAt: string
+        updatedAt: string
+    }
+
+    export type ExpenseCategory = "operational" | "salary" | "purchase" | "utility" | "other"
+
+    export interface GetExpenseResponse {
+        expense: Expense
+    }
+
+    export interface ListExpensesResponse {
+        expenses: Expense[]
+        total: number
+        page: number
+        limit: number
+        totalPages: number
+    }
+
+    export interface UpdateExpenseResponse {
+        expense: Expense
+    }
+
+    export class ServiceClient {
+        private baseClient: BaseClient
+
+        constructor(baseClient: BaseClient) {
+            this.baseClient = baseClient
+            this.createExpense = this.createExpense.bind(this)
+            this.deleteExpense = this.deleteExpense.bind(this)
+            this.getExpense = this.getExpense.bind(this)
+            this.listExpenses = this.listExpenses.bind(this)
+            this.updateExpense = this.updateExpense.bind(this)
+        }
+
+        public async createExpense(params: CreateExpenseRequest): Promise<CreateExpenseResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/expenses`, JSON.stringify(params))
+            return await resp.json() as CreateExpenseResponse
+        }
+
+        public async deleteExpense(id: string): Promise<DeleteExpenseResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/expenses/${encodeURIComponent(id)}`)
+            return await resp.json() as DeleteExpenseResponse
+        }
+
+        public async getExpense(id: string): Promise<GetExpenseResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/expenses/${encodeURIComponent(id)}`)
+            return await resp.json() as GetExpenseResponse
+        }
+
+        public async listExpenses(params: {
+    startDate?: string
+    endDate?: string
+    category?: ExpenseCategory
+    search?: string
+    page?: number
+    limit?: number
+}): Promise<ListExpensesResponse> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                category:  params.category === undefined ? undefined : String(params.category),
+                endDate:   params.endDate,
+                limit:     params.limit === undefined ? undefined : String(params.limit),
+                page:      params.page === undefined ? undefined : String(params.page),
+                search:    params.search,
+                startDate: params.startDate,
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/expenses`, undefined, {query})
+            return await resp.json() as ListExpensesResponse
+        }
+
+        public async updateExpense(id: string, params: {
+    category?: ExpenseCategory
+    description?: string
+    amount?: number
+    occurredAt?: string
+}): Promise<UpdateExpenseResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/expenses/${encodeURIComponent(id)}`, JSON.stringify(params))
+            return await resp.json() as UpdateExpenseResponse
+        }
     }
 }
 
@@ -132,9 +438,6 @@ export namespace mafaaza_api {
         message: string
     }
 
-    /**
-     * The public shape returned by `GET /profile`.
-     */
     export interface ProfileResponse {
         userID: string
         email: string
@@ -182,6 +485,8 @@ export namespace masters {
         sku?: string
         price: number
         unit?: string
+        stock?: number
+        minStock?: number
         description?: string
     }
 
@@ -189,8 +494,21 @@ export namespace masters {
         product: Product
     }
 
+    export interface DashboardProductStatsResponse {
+        activeProductsCount: number
+        lowStockCount: number
+    }
+
     export interface GetProductResponse {
         product: ProductWithCategory
+    }
+
+    export interface GetProductsByIdsRequest {
+        ids: string[]
+    }
+
+    export interface GetProductsByIdsResponse {
+        products: ProductWithCategory[]
     }
 
     export interface ListProductsRequest {
@@ -208,6 +526,18 @@ export namespace masters {
         limit: number
     }
 
+    export interface LowStockItem {
+        id: string
+        name: string
+        stock: number
+        minStock: number
+        unit: string
+    }
+
+    export interface LowStockResponse {
+        products: LowStockItem[]
+    }
+
     export interface Product {
         id: string
         categoryId: string | null
@@ -215,6 +545,8 @@ export namespace masters {
         sku: string | null
         price: number
         unit: string
+        stock: number
+        minStock: number
         description: string | null
         isActive: boolean
         createdAt: string
@@ -229,6 +561,8 @@ export namespace masters {
         sku: string | null
         price: number
         unit: string
+        stock: number
+        minStock: number
         description: string | null
         isActive: boolean
         createdAt: string
@@ -246,7 +580,10 @@ export namespace masters {
             this.baseClient = baseClient
             this.createProduct = this.createProduct.bind(this)
             this.deleteProduct = this.deleteProduct.bind(this)
+            this.getDashboardProductStats = this.getDashboardProductStats.bind(this)
+            this.getLowStock = this.getLowStock.bind(this)
             this.getProduct = this.getProduct.bind(this)
+            this.getProductsByIds = this.getProductsByIds.bind(this)
             this.listProducts = this.listProducts.bind(this)
             this.updateProduct = this.updateProduct.bind(this)
         }
@@ -268,10 +605,35 @@ export namespace masters {
             await this.baseClient.callTypedAPI("DELETE", `/products/${encodeURIComponent(id)}`, undefined, {query})
         }
 
+        public async getDashboardProductStats(): Promise<DashboardProductStatsResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/products/stats/dashboard`)
+            return await resp.json() as DashboardProductStatsResponse
+        }
+
+        public async getLowStock(params: {
+    limit?: number
+}): Promise<LowStockResponse> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                limit: params.limit === undefined ? undefined : String(params.limit),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/low-stock`, undefined, {query})
+            return await resp.json() as LowStockResponse
+        }
+
         public async getProduct(id: string): Promise<GetProductResponse> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/products/${encodeURIComponent(id)}`)
             return await resp.json() as GetProductResponse
+        }
+
+        public async getProductsByIds(params: GetProductsByIdsRequest): Promise<GetProductsByIdsResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/products/batch`, JSON.stringify(params))
+            return await resp.json() as GetProductsByIdsResponse
         }
 
         public async listProducts(params: ListProductsRequest): Promise<ListProductsResponse> {
@@ -295,6 +657,8 @@ export namespace masters {
     sku?: string | null
     price?: number
     unit?: string
+    stock?: number
+    minStock?: number
     description?: string | null
     isActive?: boolean
 }): Promise<UpdateProductResponse> {
@@ -306,6 +670,8 @@ export namespace masters {
 }
 
 export namespace transactions {
+    export type ChartPeriod = "today" | "week" | "month"
+
     export interface CreateOrderItemInput {
         productId: string
         quantity: number
@@ -324,6 +690,15 @@ export namespace transactions {
 
     export interface CreateOrderResponse {
         order: Order
+    }
+
+    export interface DashboardSummaryResponse {
+        todayRevenue: number
+        todayRevenueGrowthPercent: number
+        todayOrdersCount: number
+        todayOrdersGrowthPercent: number
+        activeProductsCount: number
+        lowStockCount: number
     }
 
     export interface GetOrderResponse {
@@ -408,6 +783,46 @@ export namespace transactions {
 
     export type OrderStatus = "draft" | "confirmed" | "paid" | "cancelled"
 
+    export interface RecentOrderItem {
+        id: string
+        invoiceNumber: string | null
+        totalAmount: number
+        status: string
+        createdAt: string
+    }
+
+    export interface RecentOrdersResponse {
+        orders: RecentOrderItem[]
+    }
+
+    export interface SalesChartPoint {
+        label: string
+        revenue: number
+        orders: number
+    }
+
+    export interface SalesChartResponse {
+        period: ChartPeriod
+        points: SalesChartPoint[]
+    }
+
+    export interface SalesTargetResponse {
+        targetAmount: number
+        currentAmount: number
+        percentage: number
+    }
+
+    export interface TopProductItem {
+        id: string
+        name: string
+        quantitySold: number
+        totalRevenue: number
+    }
+
+    export interface TopProductsResponse {
+        products: TopProductItem[]
+    }
+
     export interface UpdateOrderStatusResponse {
         order: Order
     }
@@ -419,7 +834,12 @@ export namespace transactions {
             this.baseClient = baseClient
             this.createOrder = this.createOrder.bind(this)
             this.deleteOrder = this.deleteOrder.bind(this)
+            this.getDashboardSummary = this.getDashboardSummary.bind(this)
             this.getOrder = this.getOrder.bind(this)
+            this.getRecentOrders = this.getRecentOrders.bind(this)
+            this.getSalesChart = this.getSalesChart.bind(this)
+            this.getSalesTarget = this.getSalesTarget.bind(this)
+            this.getTopProducts = this.getTopProducts.bind(this)
             this.listOrders = this.listOrders.bind(this)
             this.updateOrderStatus = this.updateOrderStatus.bind(this)
         }
@@ -434,10 +854,76 @@ export namespace transactions {
             await this.baseClient.callTypedAPI("DELETE", `/orders/${encodeURIComponent(id)}`)
         }
 
+        /**
+         * Returns key KPI metrics for the dashboard header.
+         */
+        public async getDashboardSummary(): Promise<DashboardSummaryResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/summary`)
+            return await resp.json() as DashboardSummaryResponse
+        }
+
         public async getOrder(id: string): Promise<GetOrderResponse> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/orders/${encodeURIComponent(id)}`)
             return await resp.json() as GetOrderResponse
+        }
+
+        /**
+         * Returns recent transactions for cashier/admin dashboard.
+         */
+        public async getRecentOrders(params: {
+    limit?: number
+}): Promise<RecentOrdersResponse> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                limit: params.limit === undefined ? undefined : String(params.limit),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/recent-orders`, undefined, {query})
+            return await resp.json() as RecentOrdersResponse
+        }
+
+        /**
+         * Returns sales trend points for chart visualization.
+         */
+        public async getSalesChart(params: {
+    period?: ChartPeriod
+}): Promise<SalesChartResponse> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                period: params.period === undefined ? undefined : String(params.period),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/sales-chart`, undefined, {query})
+            return await resp.json() as SalesChartResponse
+        }
+
+        /**
+         * Returns monthly sales target progress metrics.
+         */
+        public async getSalesTarget(): Promise<SalesTargetResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/target`)
+            return await resp.json() as SalesTargetResponse
+        }
+
+        /**
+         * Returns top-selling products by quantity sold and revenue.
+         */
+        public async getTopProducts(params: {
+    limit?: number
+}): Promise<TopProductsResponse> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                limit: params.limit === undefined ? undefined : String(params.limit),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/top-products`, undefined, {query})
+            return await resp.json() as TopProductsResponse
         }
 
         public async listOrders(params: ListOrdersRequest): Promise<ListOrdersResponse> {

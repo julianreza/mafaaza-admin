@@ -1,54 +1,58 @@
 import { Suspense } from "react";
 import { ReceiptText } from "lucide-react";
 import { LoginForm } from "./login-form";
+import { BannerCarousel } from "./banner-carousel";
 
 export const metadata = { title: "Masuk — Mafaaza Admin" };
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-8 p-4 sm:p-6 md:p-10 relative overflow-hidden">
-      {/* Animated gradient base layer */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-br from-brand/20 via-background/10 to-accent-2/20 animate-gradient-orbit pointer-events-none"
-      />
+    <div className="relative flex min-h-svh items-center justify-center bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-soft/60 via-background to-background p-3 sm:p-4 md:p-6">
+      {/* Background ambient glow */}
+      <div className="pointer-events-none absolute -top-40 -right-40 size-[550px] rounded-full bg-brand/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -left-40 size-[550px] rounded-full bg-brand-accent/10 blur-3xl" />
 
-      {/* Chaotic vibrant blobs */}
-      <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-gradient-to-br from-brand/25 to-accent-2/15 rounded-full blur-3xl animate-float-deep"
-          style={{ animationDelay: "0s" }}
-        />
-        <div
-          className="absolute top-[20%] right-[5%] w-[45%] h-[45%] bg-gradient-to-bl from-brand-accent/30 to-accent-2/20 rounded-full blur-3xl animate-float-deep"
-          style={{ animationDelay: "4s" }}
-        />
-        <div
-          className="absolute -bottom-[15%] left-[15%] w-[50%] h-[50%] bg-gradient-to-tr from-brand/20 to-accent-2/10 rounded-full blur-3xl animate-float-deep"
-          style={{ animationDelay: "8s" }}
-        />
-        <div
-          className="absolute top-[60%] left-[40%] w-[35%] h-[35%] bg-gradient-to-br from-brand-accent/25 to-accent-2/15 rounded-full blur-3xl animate-float-deep"
-          style={{ animationDelay: "12s" }}
-        />
-        <div
-          className="absolute top-[30%] left-[30%] w-[25%] h-[25%] bg-gradient-to-tr from-brand/15 to-accent-2/10 rounded-full blur-2xl animate-float-deep"
-          style={{ animationDelay: "16s" }}
-        />
-      </div>
+      {/* Main Card Container with flush right banner */}
+      <div className="relative flex w-full max-w-[1560px] min-h-[calc(100vh-2.5rem)] flex-col justify-center overflow-hidden rounded-[28px] border border-border/80 bg-card p-0 shadow-2xl shadow-brand/10 transition-all sm:rounded-[36px] lg:min-h-[780px]">
+        <div className="grid w-full grid-cols-1 items-stretch lg:grid-cols-12 min-h-[calc(100vh-2.5rem)] lg:min-h-[780px]">
+          
+          {/* Left Column: Login Form with generous internal padding */}
+          <div className="flex flex-col justify-between p-6 sm:p-10 lg:col-span-5 xl:col-span-5 lg:p-12 xl:p-16">
+            {/* Brand Logo */}
+            <div className="mb-6 flex items-center gap-3.5">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-brand text-white shadow-md shadow-brand/25">
+                <ReceiptText aria-hidden="true" className="size-6" />
+              </div>
+              <span className="text-2xl font-bold tracking-tight text-foreground">
+                Mafaaza
+              </span>
+            </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex items-center justify-center gap-3 mb-8 font-medium text-lg relative">
-          <div className="bg-gradient-to-br from-brand to-accent-2 text-white flex size-10 items-center justify-center rounded-xl shadow-glow-gradient-brand-xl animate-micro-bounce transition-transform hover:scale-110 hover:rotate-3">
-            <ReceiptText aria-hidden="true" className="size-6" />
+            {/* Login Form Container */}
+            <div className="my-auto py-4">
+              <Suspense>
+                <LoginForm />
+              </Suspense>
+            </div>
+
+            {/* Footer copyright */}
+            <div className="mt-6 text-center text-xs text-muted-foreground/60 lg:text-left">
+              &copy; {new Date().getFullYear()} Mafaaza Admin. Hak cipta dilindungi.
+            </div>
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-brand via-brand-accent to-accent-2 bg-clip-text text-transparent">Mafaaza</h1>
+
+          {/* Right Column: Interactive Thematic Fried Chicken Carousel (Flush Full Top to Bottom) */}
+          <BannerCarousel />
+
         </div>
-        <Suspense>
-          <LoginForm />
-        </Suspense>
       </div>
     </div>
   );
 }
+
+
+
+
+
+
+

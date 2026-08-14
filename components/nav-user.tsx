@@ -16,12 +16,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 
 function initials(name: string): string {
@@ -39,7 +33,6 @@ interface NavUserProps {
 }
 
 export function NavUser({ user }: NavUserProps) {
-  const { isMobile } = useSidebar();
   const { setTheme } = useTheme();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
@@ -58,78 +51,74 @@ export function NavUser({ user }: NavUserProps) {
   }
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                size="lg"
-                className="transition-colors hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent"
-              />
-            }
-          >
-            <div className="flex items-center gap-3">
-              <Avatar className="size-9 rounded-xl ring-1 ring-brand/25 shadow-sm">
-                <AvatarFallback className="rounded-xl bg-gradient-to-br from-brand to-brand-accent text-white">{initials(user.name)}</AvatarFallback>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            className="flex w-full items-center rounded-lg p-1 text-left transition-colors hover:bg-peach-muted dark:hover:bg-muted"
+          />
+        }
+      >
+        <div className="flex w-full items-center gap-3">
+          <Avatar className="size-9 rounded-full">
+            <AvatarFallback className="rounded-full bg-brand text-white">{initials(user.name)}</AvatarFallback>
+          </Avatar>
+          <div className="hidden min-w-0 flex-1 text-left text-sm leading-tight sm:grid">
+            <span className="truncate font-semibold text-foreground">{user.name}</span>
+            <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+          </div>
+          <ChevronsUpDown className="ml-auto hidden size-4 shrink-0 text-muted-foreground sm:block" />
+        </div>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        className="min-w-56 rounded-xl border-border bg-popover p-1 shadow-lg"
+        side="bottom"
+        align="end"
+        sideOffset={8}
+      >
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="p-2 font-normal">
+            <div className="flex items-center gap-3 text-left text-sm">
+              <Avatar className="size-9 rounded-full">
+                <AvatarFallback className="rounded-full bg-brand text-white">{initials(user.name)}</AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold text-sidebar-foreground">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+              <div className="grid flex-1 leading-tight">
+                <span className="truncate font-semibold text-foreground">{user.name}</span>
+                <span className="truncate text-xs text-muted-foreground">{user.role}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground transition-transform group-data-[popup-open]:rotate-180" />
             </div>
-          </DropdownMenuTrigger>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
 
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-xl border-border/80 bg-popover/95 p-1 shadow-xl backdrop-blur-xl"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={8}
+        <DropdownMenuSeparator />
+
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => setTheme("light")} className="transition-colors hover:bg-brand-soft hover:text-foreground">
+            <Sun className="text-muted-foreground" /> Terang
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTheme("dark")} className="transition-colors hover:bg-brand-soft hover:text-foreground">
+            <Moon className="text-muted-foreground" /> Gelap
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTheme("system")} className="transition-colors hover:bg-brand-soft hover:text-foreground">
+            <Monitor className="text-muted-foreground" /> Sistem
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            onClick={handleSignOut}
+            disabled={signingOut}
+            variant="destructive"
+            className="transition-colors hover:bg-destructive/10"
           >
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="p-2 font-normal">
-                <div className="flex items-center gap-3 text-left text-sm">
-                  <Avatar className="size-9 rounded-xl ring-1 ring-brand/20">
-                    <AvatarFallback className="rounded-xl bg-gradient-to-br from-brand to-brand-accent text-white">{initials(user.name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 leading-tight">
-                    <span className="truncate font-semibold text-foreground">{user.name}</span>
-                    <span className="truncate text-xs text-muted-foreground">{user.role}</span>
-                  </div>
-                </div>
-              </DropdownMenuLabel>
-            </DropdownMenuGroup>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => setTheme("light")} className="transition-colors hover:bg-amber-500/10 hover:text-foreground">
-                <Sun className="text-amber-500" /> Terang
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")} className="transition-colors hover:bg-brand/10 hover:text-foreground">
-                <Moon className="text-brand" /> Gelap
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")} className="transition-colors hover:bg-blue-500/10 hover:text-foreground">
-                <Monitor className="text-blue-500" /> Sistem
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                onClick={handleSignOut}
-                disabled={signingOut}
-                variant="destructive"
-                className="transition-colors hover:bg-destructive/10"
-              >
-                <LogOut /> {signingOut ? "Keluar..." : "Keluar"}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+            <LogOut /> {signingOut ? "Keluar..." : "Keluar"}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

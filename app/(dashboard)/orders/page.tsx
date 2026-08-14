@@ -67,10 +67,8 @@ export default async function OrdersPage({
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 px-6 py-7 text-white shadow-xl shadow-brand/20 animate-gradient-orbit sm:px-8">
-        <div aria-hidden="true" className="absolute -right-16 -top-20 size-56 rounded-full bg-white/15 blur-3xl" />
-        <div aria-hidden="true" className="absolute -bottom-24 left-1/3 size-64 rounded-full bg-indigo-200/20 blur-3xl" />
-        <div className="relative max-w-2xl">
+      <section className="rounded-2xl border border-white/10 bg-brand-deep px-6 py-7 text-white sm:px-8">
+        <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">Manajemen Transaksi</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Kelola pesanan toko Anda.</h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-white/85">
