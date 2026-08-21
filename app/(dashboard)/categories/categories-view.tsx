@@ -30,32 +30,30 @@ import {
 import { EllipsisIcon, PlusIcon, SearchIcon } from "lucide-react"
 
 import type { masters } from "@/lib/api/client"
-import { ProductFormDialog } from "./product-form-dialog"
-import { DeleteProductDialog } from "./delete-product-dialog"
+import { CategoryFormDialog } from "./category-form-dialog"
+import { DeleteCategoryDialog } from "./delete-category-dialog"
 
-interface ProductsViewProps {
-  products: masters.ProductWithCategory[]
-  categories?: masters.Category[]
+interface CategoriesViewProps {
+  categories: masters.Category[]
   total: number
   page: number
   limit: number
   search: string
 }
 
-export function ProductsView({
-  products,
-  categories = [],
+export function CategoriesView({
+  categories,
   total,
   page,
   limit,
   search,
-}: ProductsViewProps) {
+}: CategoriesViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [editProduct, setEditProduct] = useState<masters.ProductWithCategory | null>(null)
-  const [deleteProduct, setDeleteProduct] = useState<masters.ProductWithCategory | null>(null)
+  const [editCategory, setEditCategory] = useState<masters.Category | null>(null)
+  const [deleteCategory, setDeleteCategory] = useState<masters.Category | null>(null)
   const [searchInput, setSearchInput] = useState(search)
 
   const handleSearchChange = useCallback((value: string) => {
@@ -67,13 +65,12 @@ export function ProductsView({
       params.delete("search")
     }
     params.set("page", "1")
-    router.push(`/products?${params.toString()}`)
+    router.push(`/categories?${params.toString()}`)
   }, [router, searchParams])
 
   // Debounced search input sync
   useEffect(() => {
     const timeout = setTimeout(() => {
-      // Only sync if searchInput is different from search param
       if (searchInput !== (searchParams.get("search") ?? "")) {
         handleSearchChange(searchInput)
       }
@@ -83,27 +80,19 @@ export function ProductsView({
 
   const totalPages = Math.ceil(total / limit)
 
-  const handleEdit = (product: masters.ProductWithCategory) => {
-    setEditProduct(product)
+  const handleEdit = (category: masters.Category) => {
+    setEditCategory(category)
   }
 
-  const handleDelete = (product: masters.ProductWithCategory) => {
-    setDeleteProduct(product)
+  const handleDelete = (category: masters.Category) => {
+    setDeleteCategory(category)
   }
 
   const handleSuccess = () => {
     setCreateDialogOpen(false)
-    setEditProduct(null)
-    setDeleteProduct(null)
+    setEditCategory(null)
+    setDeleteCategory(null)
     router.refresh()
-  }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price)
   }
 
   return (
@@ -111,16 +100,16 @@ export function ProductsView({
       <Card className="border-border/70 bg-card/90 shadow-sm backdrop-blur-sm">
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle className="text-lg font-semibold text-foreground">Daftar Produk</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Daftar Kategori</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Menampilkan {products.length} dari {total} produk
+              Menampilkan {categories.length} dari {total} kategori
             </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
               <SearchIcon className="absolute left-2.5 top-2 size-4 text-muted-foreground" />
               <Input
-                placeholder="Cari produk..."
+                placeholder="Cari kategori..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9 h-9 w-64"
@@ -128,24 +117,24 @@ export function ProductsView({
             </div>
             <Button onClick={() => setCreateDialogOpen(true)}>
               <PlusIcon className="mr-2 size-4" />
-              Tambah Produk
+              Tambah Kategori
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {products.length === 0 ? (
+          {categories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="mb-4 rounded-full bg-muted p-4">
                 <SearchIcon className="size-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground">Tidak ada produk</h3>
+              <h3 className="text-lg font-semibold text-foreground">Tidak ada kategori</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-                {search ? "Coba ubah kata kunci pencarian Anda." : "Mulai dengan menambahkan produk baru."}
+                {search ? "Coba ubah kata kunci pencarian Anda." : "Mulai dengan menambahkan kategori baru."}
               </p>
               {!search && (
                 <Button variant="outline" className="mt-4" onClick={() => setCreateDialogOpen(true)}>
                   <PlusIcon className="mr-2 size-4" />
-                  Tambah Produk Pertama
+                  Tambah Kategori Pertama
                 </Button>
               )}
             </div>
@@ -155,36 +144,24 @@ export function ProductsView({
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-muted/50">
-                      <TableHead className="w-16">Nama</TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead>Kategori</TableHead>
-                      <TableHead className="text-right">Harga</TableHead>
-                      <TableHead>Satuan</TableHead>
+                      <TableHead>Nama</TableHead>
+                      <TableHead>Deskripsi</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="w-24 text-right">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((product) => (
-                      <TableRow key={product.id} className="hover:bg-muted/50">
+                    {categories.map((category) => (
+                      <TableRow key={category.id} className="hover:bg-muted/50">
                         <TableCell className="font-medium text-foreground">
-                          {product.name}
+                          {category.name}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {product.sku || "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {product.categoryName || "—"}
-                        </TableCell>
-                        <TableCell className="text-right font-medium text-foreground">
-                          {formatPrice(product.price)}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {product.unit}
+                          {category.description || "—"}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={product.isActive ? "default" : "secondary"}>
-                            {product.isActive ? "Aktif" : "Nonaktif"}
+                          <Badge variant={category.isActive ? "default" : "secondary"}>
+                            {category.isActive ? "Aktif" : "Nonaktif"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -195,13 +172,13 @@ export function ProductsView({
                               <EllipsisIcon className="size-4" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem onClick={() => handleEdit(product)}>
+                              <DropdownMenuItem onClick={() => handleEdit(category)}>
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
-                                onClick={() => handleDelete(product)}
+                                onClick={() => handleDelete(category)}
                               >
                                 Hapus
                               </DropdownMenuItem>
@@ -227,7 +204,7 @@ export function ProductsView({
                       onClick={() => {
                         const params = new URLSearchParams(searchParams.toString())
                         params.set("page", (page - 1).toString())
-                        router.push(`/products?${params.toString()}`)
+                        router.push(`/categories?${params.toString()}`)
                       }}
                     >
                       Sebelumnya
@@ -239,7 +216,7 @@ export function ProductsView({
                       onClick={() => {
                         const params = new URLSearchParams(searchParams.toString())
                         params.set("page", (page + 1).toString())
-                        router.push(`/products?${params.toString()}`)
+                        router.push(`/categories?${params.toString()}`)
                       }}
                     >
                       Selanjutnya
@@ -253,34 +230,32 @@ export function ProductsView({
       </Card>
 
       {createDialogOpen && (
-        <ProductFormDialog
+        <CategoryFormDialog
           open
           onOpenChange={setCreateDialogOpen}
-          product={null}
-          categories={categories}
+          category={null}
           onSuccess={handleSuccess}
         />
       )}
 
-      {editProduct && (
-        <ProductFormDialog
-          open={!!editProduct}
+      {editCategory && (
+        <CategoryFormDialog
+          open={!!editCategory}
           onOpenChange={(open) => {
-            if (!open) setEditProduct(null)
+            if (!open) setEditCategory(null)
           }}
-          product={editProduct}
-          categories={categories}
+          category={editCategory}
           onSuccess={handleSuccess}
         />
       )}
 
-      {deleteProduct && (
-        <DeleteProductDialog
-          open={!!deleteProduct}
+      {deleteCategory && (
+        <DeleteCategoryDialog
+          open={!!deleteCategory}
           onOpenChange={(open) => {
-            if (!open) setDeleteProduct(null)
+            if (!open) setDeleteCategory(null)
           }}
-          product={deleteProduct}
+          category={deleteCategory}
           onSuccess={handleSuccess}
         />
       )}

@@ -1,8 +1,8 @@
 import { AlertTriangle, ShoppingCart } from "lucide-react";
-import type { dashboard } from "@/lib/api/client";
+import type { masters } from "@/lib/api/client";
 
 interface LowStockCardProps {
-  products?: dashboard.LowStockItem[];
+  products?: masters.LowStockItem[];
 }
 
 export function LowStockCard({ products }: LowStockCardProps) {

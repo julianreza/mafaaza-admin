@@ -30,12 +30,12 @@ export default async function DashboardPage() {
     recentRes,
     targetRes,
   ] = await Promise.allSettled([
-    api.dashboard.getSummary(),
-    api.dashboard.getSalesChart({ period: "today" }),
-    api.dashboard.getTopProducts({ limit: 5 }),
-    api.dashboard.getLowStock({ limit: 5 }),
-    api.dashboard.getRecentOrders({ limit: 5 }),
-    api.dashboard.getTarget(),
+    api.transactions.getDashboardSummary(),
+    api.transactions.getSalesChart({ period: "today" }),
+    api.transactions.getTopProducts({ limit: 5 }),
+    api.masters.getLowStock({ limit: 5 }),
+    api.transactions.getRecentOrders({ limit: 5 }),
+    api.transactions.getSalesTarget(),
   ]);
 
   const summary = summaryRes.status === "fulfilled" ? summaryRes.value : undefined;

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { dashboard } from "@/lib/api/client";
+import type { transactions } from "@/lib/api/client";
 import { formatPrice } from "@/lib/format";
 
 interface SalesChartProps {
-  points?: dashboard.SalesChartPoint[];
+  points?: transactions.SalesChartPoint[];
 }
 
 export function SalesChart({ points }: SalesChartProps) {

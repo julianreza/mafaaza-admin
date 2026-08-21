@@ -1,47 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth-client";
+import { loginAction } from "./actions";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get("from") ?? "/";
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setPending(true);
+  const [state, formAction, pending] = useActionState(loginAction, {
+    ok: false,
+  });
 
-    const { error: signInError } = await authClient.signIn.email({
-      email,
-      password,
-    });
-
-    if (signInError) {
-      setError(signInError.message ?? "Email atau kata sandi salah.");
-      setPending(false);
-      return;
+  // Redirect on successful login
+  useEffect(() => {
+    if (state.ok) {
+      router.push(from);
+      router.refresh();
     }
-
-    router.push(from);
-    router.refresh();
-  }
+  }, [state.ok, from, router]);
 
   return (
-    <form onSubmit={onSubmit} aria-busy={pending} className="space-y-5">
+    <form action={formAction} aria-busy={pending} className="space-y-5">
       {/* Header */}
       <div className="space-y-1.5 text-center lg:text-left">
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -52,13 +41,13 @@ export function LoginForm() {
         </p>
       </div>
 
-      {error && (
+      {state.error && (
         <div
           role="alert"
           aria-live="polite"
           className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive text-sm animate-in fade-in slide-in-from-top-1 duration-300"
         >
-          {error}
+          {state.error}
         </div>
       )}
 
@@ -75,8 +64,6 @@ export function LoginForm() {
             autoComplete="email"
             placeholder="Email"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
             disabled={pending}
             className="h-12 rounded-2xl border-border/80 bg-background/50 px-4 text-sm placeholder:text-muted-foreground/70 focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-brand/40 transition-all shadow-xs"
           />
@@ -96,8 +83,6 @@ export function LoginForm() {
               placeholder="Password"
               required
               minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               disabled={pending}
               className="h-12 rounded-2xl border-border/80 bg-background/50 pl-4 pr-11 text-sm placeholder:text-muted-foreground/70 focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-brand/40 transition-all shadow-xs"
             />
@@ -218,4 +203,3 @@ export function LoginForm() {
     </form>
   );
 }
-

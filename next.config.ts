@@ -8,6 +8,12 @@ const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
 const nextConfig: NextConfig = {
   /**
+   * Hide the `X-Powered-By: Next.js` response header so the tech stack
+   * is not exposed in the browser Network tab.
+   */
+  poweredByHeader: false,
+
+  /**
    * Pin the workspace root to this project. Without it Turbopack walks upward
    * and picks up an unrelated `package-lock.json` in the home directory, which
    * makes module resolution non-deterministic.

@@ -33,7 +33,6 @@ const BROWSER = typeof globalThis === "object" && ("window" in globalThis);
  */
 export default class Client {
     public readonly auth: auth.ServiceClient
-    public readonly dashboard: dashboard.ServiceClient
     public readonly expenses: expenses.ServiceClient
     public readonly mafaaza_api: mafaaza_api.ServiceClient
     public readonly masters: masters.ServiceClient
@@ -53,7 +52,6 @@ export default class Client {
         this.options = options ?? {}
         const base = new BaseClient(this.target, this.options)
         this.auth = new auth.ServiceClient(base)
-        this.dashboard = new dashboard.ServiceClient(base)
         this.expenses = new expenses.ServiceClient(base)
         this.mafaaza_api = new mafaaza_api.ServiceClient(base)
         this.masters = new masters.ServiceClient(base)
@@ -93,128 +91,6 @@ export interface ClientOptions {
      * a function which returns a new object for each request.
      */
     auth?: auth.AuthParams | AuthDataGenerator
-}
-
-export namespace dashboard {
-    export type ChartPeriod = "today" | "week" | "month"
-
-    export interface SummaryResponse {
-        todayRevenue: number
-        todayRevenueGrowthPercent: number
-        todayOrdersCount: number
-        todayOrdersGrowthPercent: number
-        activeProductsCount: number
-        lowStockCount: number
-    }
-
-    export interface SalesChartPoint {
-        label: string
-        revenue: number
-        orders: number
-    }
-
-    export interface SalesChartResponse {
-        period: ChartPeriod
-        points: SalesChartPoint[]
-    }
-
-    export interface TopProductItem {
-        id: string
-        name: string
-        quantitySold: number
-        totalRevenue: number
-    }
-
-    export interface TopProductsResponse {
-        products: TopProductItem[]
-    }
-
-    export interface LowStockItem {
-        id: string
-        name: string
-        sku: string | null
-        stock: number
-        minStock: number
-        unit?: string | null
-    }
-
-    export interface LowStockResponse {
-        products: LowStockItem[]
-    }
-
-    export interface RecentOrderItem {
-        id: string
-        invoiceNumber: string | null
-        totalAmount: number
-        status: string
-        createdAt: string
-    }
-
-    export interface RecentOrdersResponse {
-        orders: RecentOrderItem[]
-    }
-
-    export interface TargetResponse {
-        targetAmount: number
-        currentAmount: number
-        percentage: number
-    }
-
-    export class ServiceClient {
-        private readonly baseClient: BaseClient
-
-        constructor(baseClient: BaseClient) {
-            this.baseClient = baseClient
-            this.getSummary = this.getSummary.bind(this)
-            this.getSalesChart = this.getSalesChart.bind(this)
-            this.getTopProducts = this.getTopProducts.bind(this)
-            this.getLowStock = this.getLowStock.bind(this)
-            this.getRecentOrders = this.getRecentOrders.bind(this)
-            this.getTarget = this.getTarget.bind(this)
-        }
-
-        public async getSummary(): Promise<SummaryResponse> {
-            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/summary`)
-            return await resp.json() as SummaryResponse
-        }
-
-        public async getSalesChart(params: { period?: ChartPeriod }): Promise<SalesChartResponse> {
-            const query = makeRecord<string, string | string[]>({
-                period: params.period === undefined ? undefined : String(params.period),
-            })
-            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/sales-chart`, undefined, {query})
-            return await resp.json() as SalesChartResponse
-        }
-
-        public async getTopProducts(params: { limit?: number }): Promise<TopProductsResponse> {
-            const query = makeRecord<string, string | string[]>({
-                limit: params.limit === undefined ? undefined : String(params.limit),
-            })
-            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/top-products`, undefined, {query})
-            return await resp.json() as TopProductsResponse
-        }
-
-        public async getLowStock(params: { limit?: number }): Promise<LowStockResponse> {
-            const query = makeRecord<string, string | string[]>({
-                limit: params.limit === undefined ? undefined : String(params.limit),
-            })
-            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/low-stock`, undefined, {query})
-            return await resp.json() as LowStockResponse
-        }
-
-        public async getRecentOrders(params: { limit?: number }): Promise<RecentOrdersResponse> {
-            const query = makeRecord<string, string | string[]>({
-                limit: params.limit === undefined ? undefined : String(params.limit),
-            })
-            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/recent-orders`, undefined, {query})
-            return await resp.json() as RecentOrdersResponse
-        }
-
-        public async getTarget(): Promise<TargetResponse> {
-            const resp = await this.baseClient.callTypedAPI("GET", `/dashboard/target`)
-            return await resp.json() as TargetResponse
-        }
-    }
 }
 
 export namespace auth {
@@ -479,6 +355,24 @@ export namespace mafaaza_api {
 }
 
 export namespace masters {
+    export interface Category {
+        id: string
+        name: string
+        description: string | null
+        isActive: boolean
+        createdAt: string
+        updatedAt: string
+    }
+
+    export interface CreateCategoryRequest {
+        name: string
+        description?: string
+    }
+
+    export interface CreateCategoryResponse {
+        category: Category
+    }
+
     export interface CreateProductRequest {
         categoryId?: string
         name: string
@@ -499,6 +393,10 @@ export namespace masters {
         lowStockCount: number
     }
 
+    export interface GetCategoryResponse {
+        category: Category
+    }
+
     export interface GetProductResponse {
         product: ProductWithCategory
     }
@@ -509,6 +407,20 @@ export namespace masters {
 
     export interface GetProductsByIdsResponse {
         products: ProductWithCategory[]
+    }
+
+    export interface ListCategoriesRequest {
+        page?: number
+        limit?: number
+        search?: string
+        isActive?: boolean
+    }
+
+    export interface ListCategoriesResponse {
+        categories: Category[]
+        total: number
+        page: number
+        limit: number
     }
 
     export interface ListProductsRequest {
@@ -569,6 +481,10 @@ export namespace masters {
         updatedAt: string
     }
 
+    export interface UpdateCategoryResponse {
+        category: Category
+    }
+
     export interface UpdateProductResponse {
         product: Product
     }
@@ -578,20 +494,42 @@ export namespace masters {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.createCategory = this.createCategory.bind(this)
             this.createProduct = this.createProduct.bind(this)
+            this.deleteCategory = this.deleteCategory.bind(this)
             this.deleteProduct = this.deleteProduct.bind(this)
+            this.getCategory = this.getCategory.bind(this)
             this.getDashboardProductStats = this.getDashboardProductStats.bind(this)
             this.getLowStock = this.getLowStock.bind(this)
             this.getProduct = this.getProduct.bind(this)
             this.getProductsByIds = this.getProductsByIds.bind(this)
+            this.listCategories = this.listCategories.bind(this)
             this.listProducts = this.listProducts.bind(this)
+            this.updateCategory = this.updateCategory.bind(this)
             this.updateProduct = this.updateProduct.bind(this)
+        }
+
+        public async createCategory(params: CreateCategoryRequest): Promise<CreateCategoryResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/categories`, JSON.stringify(params))
+            return await resp.json() as CreateCategoryResponse
         }
 
         public async createProduct(params: CreateProductRequest): Promise<CreateProductResponse> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/products`, JSON.stringify(params))
             return await resp.json() as CreateProductResponse
+        }
+
+        public async deleteCategory(id: string, params: {
+    force?: boolean
+}): Promise<void> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                force: params.force === undefined ? undefined : String(params.force),
+            })
+
+            await this.baseClient.callTypedAPI("DELETE", `/categories/${encodeURIComponent(id)}`, undefined, {query})
         }
 
         public async deleteProduct(id: string, params: {
@@ -603,6 +541,12 @@ export namespace masters {
             })
 
             await this.baseClient.callTypedAPI("DELETE", `/products/${encodeURIComponent(id)}`, undefined, {query})
+        }
+
+        public async getCategory(id: string): Promise<GetCategoryResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/categories/${encodeURIComponent(id)}`)
+            return await resp.json() as GetCategoryResponse
         }
 
         public async getDashboardProductStats(): Promise<DashboardProductStatsResponse> {
@@ -636,6 +580,20 @@ export namespace masters {
             return await resp.json() as GetProductsByIdsResponse
         }
 
+        public async listCategories(params: ListCategoriesRequest): Promise<ListCategoriesResponse> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                isActive: params.isActive === undefined ? undefined : String(params.isActive),
+                limit:    params.limit === undefined ? undefined : String(params.limit),
+                page:     params.page === undefined ? undefined : String(params.page),
+                search:   params.search,
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/categories`, undefined, {query})
+            return await resp.json() as ListCategoriesResponse
+        }
+
         public async listProducts(params: ListProductsRequest): Promise<ListProductsResponse> {
             // Convert our params into the objects we need for the request
             const query = makeRecord<string, string | string[]>({
@@ -649,6 +607,16 @@ export namespace masters {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/products`, undefined, {query})
             return await resp.json() as ListProductsResponse
+        }
+
+        public async updateCategory(id: string, params: {
+    name?: string
+    description?: string | null
+    isActive?: boolean
+}): Promise<UpdateCategoryResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PATCH", `/categories/${encodeURIComponent(id)}`, JSON.stringify(params))
+            return await resp.json() as UpdateCategoryResponse
         }
 
         public async updateProduct(id: string, params: {

@@ -34,17 +34,55 @@ export default function proxy(request: NextRequest) {
     url.pathname = "/login";
     // Remember where the user was headed so login can send them back.
     if (pathname !== "/") url.searchParams.set("from", pathname);
-    return NextResponse.redirect(url);
+    const redirectToLogin = NextResponse.redirect(url);
+    applySecurityHeaders(redirectToLogin);
+    return redirectToLogin;
   }
 
   if (hasSessionCookie && isLoginPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";
-    return NextResponse.redirect(url);
+    const redirectToDash = NextResponse.redirect(url);
+    applySecurityHeaders(redirectToDash);
+    return redirectToDash;
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  applySecurityHeaders(response);
+  return response;
+}
+
+/**
+ * Security headers applied to every response. These prevent common attacks
+ * and hide implementation details from the browser Network tab.
+ */
+function applySecurityHeaders(response: NextResponse) {
+  // Prevent clickjacking — only allow this site to embed itself
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+
+  // Prevent MIME-type sniffing — browser must trust the declared Content-Type
+  response.headers.set("X-Content-Type-Options", "nosniff");
+
+  // Minimise information sent to other origins via Referer header
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  // Disable browser features we don't use (camera, mic, geolocation, etc.)
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+  );
+
+  // Remove the Server header if present (leaks server software info)
+  response.headers.delete("Server");
+
+  // In production, enforce HTTPS for 1 year with includeSubDomains
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
+  }
 }
 
 export const config = {

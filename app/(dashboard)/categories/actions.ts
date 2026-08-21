@@ -14,7 +14,7 @@ const GENERIC_ERROR = "Terjadi kesalahan. Silakan coba lagi."
 const SESSION_ERROR = "Sesi Anda telah berakhir. Silakan masuk kembali."
 const AUTHZ_ERROR = "Anda tidak memiliki izin untuk melakukan tindakan ini."
 
-// Roles allowed to create/update/delete products. The backend defaults every
+// Roles allowed to create/update/delete categories. The backend defaults every
 // account to "user" and only elevates to "admin" via the Better Auth admin
 // plugin (see mafaaza-api services/auth/schema.ts), so mutations are admin-only.
 const ALLOWED_MUTATE_ROLES: readonly string[] = ["admin"]
@@ -44,7 +44,7 @@ async function getAuthedApi(): Promise<
 
 /**
  * Like `getAuthedApi`, but additionally enforces that the caller holds a role
- * permitted to mutate products. Use this in every create/update/delete action.
+ * permitted to mutate categories. Use this in every create/update/delete action.
  */
 async function getMutatingApi(): Promise<{ api: Client } | { error: string }> {
   const auth = await getAuthedApi()
@@ -55,7 +55,7 @@ async function getMutatingApi(): Promise<{ api: Client } | { error: string }> {
   return { api: auth.api }
 }
 
-export async function createProductAction(
+export async function createCategoryAction(
   prevState: { ok: boolean; error?: string },
   formData: FormData
 ): Promise<ActionResult> {
@@ -63,105 +63,84 @@ export async function createProductAction(
   if ("error" in auth) return { ok: false, error: auth.error }
 
   const name = formData.get("name") as string
-  const categoryId = formData.get("categoryId") as string | undefined
-  const sku = formData.get("sku") as string | undefined
-  const priceStr = formData.get("price") as string | undefined
-  const unit = formData.get("unit") as string | undefined
   const description = formData.get("description") as string | undefined
 
   // Validation
   if (!name || name.trim() === "") {
-    return { ok: false, error: "Nama produk wajib diisi." }
-  }
-
-  const price = parseFloat(priceStr || "0")
-  if (isNaN(price) || price < 0) {
-    return { ok: false, error: "Harga harus berupa angka >= 0." }
+    return { ok: false, error: "Nama kategori wajib diisi." }
   }
 
   try {
-    await auth.api.masters.createProduct({
-      categoryId: categoryId || undefined,
-      name,
-      sku: sku || undefined,
-      price,
-      unit: unit || "pcs",
-      description: description || undefined,
+    await auth.api.masters.createCategory({
+      name: name.trim(),
+      description: description?.trim() || undefined,
     })
 
-    revalidatePath("/products")
+    revalidatePath("/categories")
     return { ok: true }
   } catch (err) {
-    console.error("[createProductAction] failed:", err)
+    console.error("[createCategoryAction] failed:", err)
     return { ok: false, error: GENERIC_ERROR }
   }
 }
 
-export async function updateProductAction(
+export async function updateCategoryAction(
   id: string,
   formData: FormData
 ): Promise<ActionResult> {
   const auth = await getMutatingApi()
   if ("error" in auth) return { ok: false, error: auth.error }
 
-  const name = formData.get("name") as string | undefined
-  const sku = formData.get("sku") as string | undefined
-  const priceStr = formData.get("price") as string | undefined
-  const unit = formData.get("unit") as string | undefined
-  const description = formData.get("description") as string | undefined
-  const isActive = formData.get("isActive") as string | undefined
+  const name = formData.get("name") as string | null
+  const description = formData.get("description") as string | null
+  const isActive = formData.get("isActive") as string | null
 
   // Validation
-  if (!name || name.trim() === "") {
-    return { ok: false, error: "Nama produk wajib diisi." }
-  }
-
-  const price = priceStr ? parseFloat(priceStr) : undefined
-  if (price !== undefined && (isNaN(price) || price < 0)) {
-    return { ok: false, error: "Harga harus berupa angka >= 0." }
+  if (name !== null && name.trim() === "") {
+    return { ok: false, error: "Nama kategori tidak boleh kosong." }
   }
 
   try {
-    const params: Record<string, unknown> = {}
+    const params: {
+      name?: string
+      description?: string | null
+      isActive?: boolean
+    } = {}
 
-    // `FormData.get` returns `null` (not `undefined`) for an absent field, so a
-    // `!== undefined` guard would always pass and send `categoryId: null`,
-    // silently wiping the product's category on every edit. The edit form does
-    // not include a category picker, so gate on `has()` — only touch categoryId
-    // when the field is actually part of the submission. An explicitly-sent but
-    // empty value is treated as an intentional clear.
-    if (formData.has("categoryId")) {
-      const categoryId = formData.get("categoryId") as string
-      params.categoryId = categoryId || null
+    if (name !== null && name !== undefined) params.name = name.trim()
+    if (description !== null && description !== undefined) {
+      params.description = description.trim() || null
     }
-    if (name !== undefined) params.name = name
-    if (sku !== undefined) params.sku = sku || null
-    if (price !== undefined) params.price = price
-    if (unit !== undefined) params.unit = unit
-    if (description !== undefined) params.description = description || null
-    if (isActive !== undefined) params.isActive = isActive === "on"
+    if (isActive !== null && isActive !== undefined) {
+      params.isActive = isActive === "on"
+    } else if (formData.has("isActive")) {
+      params.isActive = false
+    } else {
+      // In case isActive checkbox is absent from form submission during edit
+      params.isActive = false
+    }
 
-    await auth.api.masters.updateProduct(id, params)
+    await auth.api.masters.updateCategory(id, params)
 
-    revalidatePath("/products")
+    revalidatePath("/categories")
     return { ok: true }
   } catch (err) {
-    console.error("[updateProductAction] failed:", err)
+    console.error("[updateCategoryAction] failed:", err)
     return { ok: false, error: GENERIC_ERROR }
   }
 }
 
-export async function deleteProductAction(id: string): Promise<ActionResult> {
+export async function deleteCategoryAction(id: string): Promise<ActionResult> {
   const auth = await getMutatingApi()
   if ("error" in auth) return { ok: false, error: auth.error }
 
   try {
-    await auth.api.masters.deleteProduct(id, { force: false })
+    await auth.api.masters.deleteCategory(id, { force: false })
 
-    revalidatePath("/products")
+    revalidatePath("/categories")
     return { ok: true }
   } catch (err) {
-    console.error("[deleteProductAction] failed:", err)
+    console.error("[deleteCategoryAction] failed:", err)
     return { ok: false, error: GENERIC_ERROR }
   }
 }

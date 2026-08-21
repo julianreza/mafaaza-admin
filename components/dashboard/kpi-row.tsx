@@ -1,9 +1,9 @@
 import { ArrowUpRight, TrendingDown, TrendingUp } from "lucide-react";
-import type { dashboard } from "@/lib/api/client";
+import type { transactions } from "@/lib/api/client";
 import { formatPrice } from "@/lib/format";
 
 interface KpiRowProps {
-  summary?: dashboard.SummaryResponse;
+  summary?: transactions.DashboardSummaryResponse;
 }
 
 export function KpiRow({ summary }: KpiRowProps) {

@@ -2,9 +2,9 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { getApiClientFromCookies } from "@/lib/api"
-import { ProductsView } from "./products-view"
+import { CategoriesView } from "./categories-view"
 
-export default async function ProductsPage({
+export default async function CategoriesPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string; search?: string }>
@@ -23,44 +23,39 @@ export default async function ProductsPage({
   const pageNum = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1
   const limit = 20
 
-  // Fetch products and active categories in parallel gracefully
-  const [productsRes, categoriesRes] = await Promise.allSettled([
-    api.masters.listProducts({
+  // Guard the fetch: the session is already validated above, but the backend
+  // call can still fail (network/500). Degrade to an empty list rather than
+  // throwing an unhandled error that blanks the whole route.
+  let result: Awaited<ReturnType<typeof api.masters.listCategories>>
+  try {
+    result = await api.masters.listCategories({
       page: pageNum,
       limit,
       search: search || undefined,
-    }),
-    api.masters.listCategories({
-      limit: 100,
-      isActive: true,
-    }),
-  ])
-
-  const result =
-    productsRes.status === "fulfilled"
-      ? productsRes.value
-      : { products: [], total: 0, page: pageNum, limit }
-
-  const categories =
-    categoriesRes.status === "fulfilled"
-      ? categoriesRes.value.categories
-      : []
+    })
+  } catch (err) {
+    console.error("[CategoriesPage] listCategories failed:", err)
+    result = { categories: [], total: 0, page: pageNum, limit }
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <section className="rounded-2xl border border-white/10 bg-brand-deep px-6 py-7 text-white sm:px-8">
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">Manajemen Produk</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Kelola produk toko Anda.</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
+            Manajemen Kategori
+          </p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+            Kelola kategori produk Anda.
+          </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-white/85">
-            Tambah, edit, atau nonaktifkan produk tanpa menghapus data.
+            Tambah, edit, atau nonaktifkan kategori tanpa menghapus data.
           </p>
         </div>
       </section>
 
-      <ProductsView
-        products={result.products}
-        categories={categories}
+      <CategoriesView
+        categories={result.categories}
         total={result.total}
         page={result.page}
         limit={result.limit}

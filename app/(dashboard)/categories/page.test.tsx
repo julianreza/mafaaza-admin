@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-const { profile, listProducts, listCategories, redirect } = vi.hoisted(() => ({
+const { profile, listCategories, redirect } = vi.hoisted(() => ({
   profile: vi.fn(),
-  listProducts: vi.fn(),
   listCategories: vi.fn(),
-  // Mirror Next's redirect(), which throws to halt rendering.
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT:${path}`)
   }),
@@ -13,7 +11,7 @@ const { profile, listProducts, listCategories, redirect } = vi.hoisted(() => ({
 vi.mock("@/lib/api", () => ({
   getApiClientFromCookies: () => ({
     mafaaza_api: { profile },
-    masters: { listProducts, listCategories },
+    masters: { listCategories },
   }),
 }))
 
@@ -23,16 +21,13 @@ vi.mock("next/headers", () => ({
 
 vi.mock("next/navigation", () => ({ redirect }))
 
-// Replace the client view with a marker component so we can read the props the
-// page forwards without rendering to a DOM.
-vi.mock("@/app/(dashboard)/products/products-view", () => ({
-  ProductsView: (props: unknown) => props,
+vi.mock("@/app/(dashboard)/categories/categories-view", () => ({
+  CategoriesView: (props: unknown) => props,
 }))
 
-import ProductsPage from "@/app/(dashboard)/products/page"
-import { ProductsView } from "@/app/(dashboard)/products/products-view"
+import CategoriesPage from "@/app/(dashboard)/categories/page"
+import { CategoriesView } from "@/app/(dashboard)/categories/categories-view"
 
-// Depth-first search of a React element tree for the first node of a given type.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function findByType(node: any, type: unknown): any {
   if (!node || typeof node !== "object") return null
@@ -47,73 +42,72 @@ function findByType(node: any, type: unknown): any {
 }
 
 async function renderPage(sp: { page?: string; search?: string }) {
-  const element = await ProductsPage({ searchParams: Promise.resolve(sp) })
-  return findByType(element, ProductsView)?.props
+  const element = await CategoriesPage({ searchParams: Promise.resolve(sp) })
+  return findByType(element, CategoriesView)?.props
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
   profile.mockResolvedValue({ email: "admin@mafaaza.test", role: "admin" })
-  listProducts.mockResolvedValue({ products: [], total: 0, page: 1, limit: 20 })
-  listCategories.mockResolvedValue({ categories: [], total: 0, page: 1, limit: 100 })
+  listCategories.mockResolvedValue({ categories: [], total: 0, page: 1, limit: 20 })
 })
 
-describe("ProductsPage — auth", () => {
+describe("CategoriesPage — auth", () => {
   it("redirects to /login when the session is invalid and never fetches", async () => {
     profile.mockRejectedValueOnce(new Error("401"))
     await expect(
-      ProductsPage({ searchParams: Promise.resolve({}) }),
+      CategoriesPage({ searchParams: Promise.resolve({}) }),
     ).rejects.toThrow("NEXT_REDIRECT:/login")
     expect(redirect).toHaveBeenCalledWith("/login")
-    expect(listProducts).not.toHaveBeenCalled()
+    expect(listCategories).not.toHaveBeenCalled()
   })
 })
 
-describe("ProductsPage — list + search + pagination", () => {
+describe("CategoriesPage — list + search + pagination", () => {
   it("fetches page 1 with no search by default", async () => {
     await renderPage({})
-    expect(listProducts).toHaveBeenCalledWith({ page: 1, limit: 20, search: undefined })
+    expect(listCategories).toHaveBeenCalledWith({ page: 1, limit: 20, search: undefined })
   })
 
   it("passes the search term through", async () => {
-    await renderPage({ search: "kopi" })
-    expect(listProducts).toHaveBeenCalledWith({ page: 1, limit: 20, search: "kopi" })
+    await renderPage({ search: "makanan" })
+    expect(listCategories).toHaveBeenCalledWith({ page: 1, limit: 20, search: "makanan" })
   })
 
   it("parses a valid page number", async () => {
     await renderPage({ page: "3" })
-    expect(listProducts).toHaveBeenCalledWith({ page: 3, limit: 20, search: undefined })
+    expect(listCategories).toHaveBeenCalledWith({ page: 3, limit: 20, search: undefined })
   })
 
   it.each(["abc", "0", "-2", ""])(
     "sanitizes an invalid page (%s) to 1",
     async (page) => {
       await renderPage({ page })
-      expect(listProducts).toHaveBeenCalledWith({ page: 1, limit: 20, search: undefined })
+      expect(listCategories).toHaveBeenCalledWith({ page: 1, limit: 20, search: undefined })
     },
   )
 
-  it("forwards fetched products, total, page and search to the view", async () => {
-    listProducts.mockResolvedValueOnce({
-      products: [{ id: "p1", name: "Kopi" }],
+  it("forwards fetched categories, total, page and search to the view", async () => {
+    listCategories.mockResolvedValueOnce({
+      categories: [{ id: "c1", name: "Minuman" }],
       total: 1,
       page: 2,
       limit: 20,
     })
-    const props = await renderPage({ page: "2", search: "ko" })
-    expect(props.products).toEqual([{ id: "p1", name: "Kopi" }])
+    const props = await renderPage({ page: "2", search: "mi" })
+    expect(props.categories).toEqual([{ id: "c1", name: "Minuman" }])
     expect(props.total).toBe(1)
     expect(props.page).toBe(2)
-    expect(props.search).toBe("ko")
+    expect(props.search).toBe("mi")
   })
 })
 
-describe("ProductsPage — fetch guard", () => {
+describe("CategoriesPage — fetch guard", () => {
   it("degrades to an empty list (no throw) when the backend fetch fails", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {})
-    listProducts.mockRejectedValueOnce(new Error("Encore: 500"))
+    listCategories.mockRejectedValueOnce(new Error("Encore: 500"))
     const props = await renderPage({ page: "5" })
-    expect(props.products).toEqual([])
+    expect(props.categories).toEqual([])
     expect(props.total).toBe(0)
     expect(props.page).toBe(5)
     spy.mockRestore()

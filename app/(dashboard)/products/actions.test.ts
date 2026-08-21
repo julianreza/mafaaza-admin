@@ -76,11 +76,19 @@ describe("createProductAction", () => {
     createProduct.mockResolvedValueOnce({ product: { id: "p1" } })
     const res = await createProductAction(
       { ok: false },
-      fd({ name: "Kopi Susu", sku: "KS-1", price: "15000", unit: "cup", description: "enak" }),
+      fd({
+        name: "Kopi Susu",
+        categoryId: "cat-1",
+        sku: "KS-1",
+        price: "15000",
+        unit: "cup",
+        description: "enak",
+      }),
     )
     expect(res).toEqual({ ok: true })
     expect(createProduct).toHaveBeenCalledWith({
       name: "Kopi Susu",
+      categoryId: "cat-1",
       sku: "KS-1",
       price: 15000,
       unit: "cup",
@@ -94,6 +102,7 @@ describe("createProductAction", () => {
     await createProductAction({ ok: false }, fd({ name: "Teh", price: "0" }))
     expect(createProduct).toHaveBeenCalledWith({
       name: "Teh",
+      categoryId: undefined,
       sku: undefined,
       price: 0,
       unit: "pcs",

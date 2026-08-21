@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
-
+import { useState, useTransition, useMemo } from "react"
 import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -16,6 +15,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
 import { toast } from "sonner"
 
 import type { masters } from "@/lib/api/client"
@@ -25,6 +31,7 @@ interface ProductFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   product: masters.ProductWithCategory | null
+  categories?: masters.Category[]
   onSuccess: () => void
 }
 
@@ -32,11 +39,13 @@ export function ProductFormDialog({
   open,
   onOpenChange,
   product,
+  categories = [],
   onSuccess,
 }: ProductFormDialogProps) {
   const [pending, startTransition] = useTransition()
 
   const [name, setName] = useState(() => product?.name ?? "")
+  const [categoryId, setCategoryId] = useState(() => product?.categoryId ?? "")
   const [sku, setSku] = useState(() => product?.sku ?? "")
   const [price, setPrice] = useState(() => product?.price?.toString() ?? "")
   const [unit, setUnit] = useState(() => product?.unit ?? "pcs")
@@ -44,6 +53,36 @@ export function ProductFormDialog({
   const [isActive, setIsActive] = useState(() => product?.isActive ?? true)
 
   const isEdit = !!product
+
+  // Include inactive category if current product is assigned to it
+  const availableCategories = useMemo(() => {
+    const list = [...categories]
+    if (
+      product?.categoryId &&
+      !list.some((c) => c.id === product.categoryId)
+    ) {
+      list.unshift({
+        id: product.categoryId,
+        name: product.categoryName || "Kategori Terpilih",
+        description: null,
+        isActive: false,
+        createdAt: "",
+        updatedAt: "",
+      })
+    }
+    return list
+  }, [categories, product])
+
+  // Select items format mapping for Base UI Select
+  const categorySelectItems = useMemo(() => {
+    return [
+      { value: "none", label: "Tanpa Kategori" },
+      ...availableCategories.map((cat) => ({
+        value: cat.id,
+        label: cat.name,
+      })),
+    ]
+  }, [availableCategories])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,6 +100,7 @@ export function ProductFormDialog({
     startTransition(async () => {
       const formData = new FormData()
       formData.append("name", name)
+      formData.append("categoryId", categoryId)
       if (sku) formData.append("sku", sku)
       formData.append("price", price)
       if (unit) formData.append("unit", unit)
@@ -102,6 +142,32 @@ export function ProductFormDialog({
               required
               disabled={pending}
             />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="category">Kategori</Label>
+            <Select
+              items={categorySelectItems}
+              value={categoryId || "none"}
+              onValueChange={(val) => setCategoryId(val === "none" ? "" : (val ?? ""))}
+              disabled={pending}
+            >
+              <SelectTrigger id="category" className="w-full">
+                <SelectValue placeholder="Pilih kategori (opsional)">
+                  {(val) => {
+                    const item = categorySelectItems.find((i) => i.value === val)
+                    return item ? item.label : "Pilih kategori (opsional)"
+                  }}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {categorySelectItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-2">

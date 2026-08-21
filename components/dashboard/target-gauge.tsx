@@ -1,4 +1,4 @@
-import type { dashboard } from "@/lib/api/client";
+import type { transactions } from "@/lib/api/client";
 import { formatPrice } from "@/lib/format";
 
 const R = 70;
@@ -18,7 +18,7 @@ const legend = [
 
 interface TargetGaugeProps {
   percent?: number;
-  target?: dashboard.TargetResponse;
+  target?: transactions.SalesTargetResponse;
 }
 
 export function TargetGauge({ percent, target }: TargetGaugeProps) {

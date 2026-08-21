@@ -10,6 +10,7 @@ import {
   Package,
   ReceiptText,
   Settings,
+  Tags,
   Users,
   Wallet,
 } from "lucide-react";
@@ -35,6 +36,7 @@ const menuItems = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
   { title: "Penjualan", href: "/orders", icon: ReceiptText },
   { title: "Produk", href: "/products", icon: Package },
+  { title: "Kategori", href: "/categories", icon: Tags },
   { title: "Pelanggan", href: "/customers", icon: Users },
   { title: "Pengeluaran", href: "/expenses", icon: Wallet },
   { title: "Laporan", href: "/reports", icon: BarChart3 },

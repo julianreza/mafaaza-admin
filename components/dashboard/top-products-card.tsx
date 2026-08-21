@@ -1,8 +1,8 @@
-import type { dashboard } from "@/lib/api/client";
+import type { transactions } from "@/lib/api/client";
 import { formatPrice } from "@/lib/format";
 
 interface TopProductsCardProps {
-  products?: dashboard.TopProductItem[];
+  products?: transactions.TopProductItem[];
 }
 
 function initials(name: string): string {

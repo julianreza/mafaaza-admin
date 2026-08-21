@@ -1,10 +1,10 @@
 import { CheckCircle2, Plus } from "lucide-react";
 import Link from "next/link";
-import type { dashboard } from "@/lib/api/client";
+import type { transactions } from "@/lib/api/client";
 import { formatPrice } from "@/lib/format";
 
 interface RecentOrdersCardProps {
-  orders?: dashboard.RecentOrderItem[];
+  orders?: transactions.RecentOrderItem[];
 }
 
 export function RecentOrdersCard({ orders }: RecentOrdersCardProps) {
